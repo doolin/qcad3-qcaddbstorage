@@ -1,6 +1,6 @@
 /*!
 
-\addtogroup qcaddbstorage QCad DB Storage Module
+\addtogroup qcaddbstorage qcaddbstorage: DB Storage Module
 
 \brief This module implements a \ref RS_Storage "storage" that uses an 
 SQLite DB instance to store CAD documents.
