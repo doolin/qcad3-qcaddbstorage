@@ -2,6 +2,7 @@
 #define RS_DBENTITY_H
 
 #include "RS_Entity"
+#include "RS_DbsEntityRegistry"
 
 class RS_DbConnection;
 
@@ -17,7 +18,18 @@ class RS_DbConnection;
  */
 class RS_DbsEntity {
 public:
+    RS_DbsEntity() {}
     virtual ~RS_DbsEntity() {}
+
+    /**
+     * \return ID of this entity type as used in the DB to 
+     *      distinguish between different entity types.
+     */
+    /*
+    virtual RS_Entity::TypeId getTypeId() {
+        return typeId;
+    }
+    */
 
     /**
      * This static function registers this entity type with 
@@ -29,7 +41,12 @@ public:
      * E.g. main() might call MyEntity::registerType(); to 
      * make MyEntity available as a valid entity type.
      */
-    static void registerType();
+    /*
+    template <class T>
+    static void registerType() {
+        RS_DbsEntityRegistry::registerEntityType(T::getTypeIdStatic(), new T());
+    }
+    */
 
     /**
      * Initializes the DB for this entity type (creating tables, etc.).

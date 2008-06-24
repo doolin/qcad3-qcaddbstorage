@@ -1,4 +1,5 @@
 #include "RS_DbsEntity"
+#include "RS_Line"
 
 
 
@@ -9,16 +10,16 @@
  * \ingroup qcaddbstorage
  */
 class RS_DbsLine : public RS_DbsEntity {
-private:
-    /**
-     * Private constructor prevents from instantiation other than through
-     * \ref registerType.
-     */
-    RS_DbsLine() {}
-
 public:
+    RS_DbsLine() : RS_DbsEntity() {}
     virtual ~RS_DbsLine() {}
-
+    
+    /*
+    virtual int getTypeId() {
+        return 2;
+    }
+    */
+    
     static void registerType();
 
     virtual void initDb(RS_DbConnection& db);

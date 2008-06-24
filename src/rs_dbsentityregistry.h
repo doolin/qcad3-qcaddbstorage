@@ -4,6 +4,7 @@
 #include <map>
 
 #include "RS_Entity"
+#include "RS_Debug"
 
 class RS_DbConnection;
 class RS_DbsEntity;
@@ -30,6 +31,27 @@ class RS_DbsEntity;
 class RS_DbsEntityRegistry {
 public:
     static void registerStandardEntityTypes();
+    
+    /*
+    template <class DbT, class T>
+    static void registerEntityType() {
+        //RS_DbsEntityRegistry::registerEntityType(T::getTypeIdStatic(), new T());
+        RS_Entity::TypeId typeId = getEntityTypeId<T>();
+            
+        dbEntities[typeId] = new DbT(typeId);
+    }
+    
+    template <class T>
+    static RS_Entity::TypeId getEntityTypeId() {
+        static RS_Entity::TypeId typeId = -1;
+
+        if (typeId==-1) {
+            typeId = typeIdCounter++;
+        }
+
+        return typeId;
+    }
+    */
 
     static void registerEntityType(
         RS_Entity::TypeId typeId, 
@@ -44,6 +66,7 @@ public:
 
 private:
     static std::map<RS_Entity::TypeId, RS_DbsEntity*> dbEntities;
+    static RS_Entity::TypeId typeIdCounter;
 };
 
 #endif
