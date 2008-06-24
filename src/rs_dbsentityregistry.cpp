@@ -20,7 +20,6 @@ std::map<RS_Entity::TypeId, RS_DbsEntity*> RS_DbsEntityRegistry::dbEntities;
  */
 void RS_DbsEntityRegistry::registerStandardEntityTypes() {
     RS_DbsLine::registerType();
-    //registerEntityType<RS_DbsLine, RS_Line>();
 }
 
 

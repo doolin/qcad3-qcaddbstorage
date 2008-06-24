@@ -22,33 +22,6 @@ public:
     virtual ~RS_DbsEntity() {}
 
     /**
-     * \return ID of this entity type as used in the DB to 
-     *      distinguish between different entity types.
-     */
-    /*
-    virtual RS_Entity::TypeId getTypeId() {
-        return typeId;
-    }
-    */
-
-    /**
-     * This static function registers this entity type with 
-     * the \ref RS_DbsEntityRegistry. For every custom entity
-     * class the application has to call this function once in 
-     * the beginning to make the custom entity type available
-     * to the application.
-     *
-     * E.g. main() might call MyEntity::registerType(); to 
-     * make MyEntity available as a valid entity type.
-     */
-    /*
-    template <class T>
-    static void registerType() {
-        RS_DbsEntityRegistry::registerEntityType(T::getTypeIdStatic(), new T());
-    }
-    */
-
-    /**
      * Initializes the DB for this entity type (creating tables, etc.).
      */
     virtual void initDb(RS_DbConnection& db) = 0;

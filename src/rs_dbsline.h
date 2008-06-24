@@ -14,12 +14,6 @@ public:
     RS_DbsLine() : RS_DbsEntity() {}
     virtual ~RS_DbsLine() {}
     
-    /*
-    virtual int getTypeId() {
-        return 2;
-    }
-    */
-    
     static void registerType();
 
     virtual void initDb(RS_DbConnection& db);

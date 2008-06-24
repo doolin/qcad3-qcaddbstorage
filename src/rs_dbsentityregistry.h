@@ -32,27 +32,6 @@ class RS_DbsEntityRegistry {
 public:
     static void registerStandardEntityTypes();
     
-    /*
-    template <class DbT, class T>
-    static void registerEntityType() {
-        //RS_DbsEntityRegistry::registerEntityType(T::getTypeIdStatic(), new T());
-        RS_Entity::TypeId typeId = getEntityTypeId<T>();
-            
-        dbEntities[typeId] = new DbT(typeId);
-    }
-    
-    template <class T>
-    static RS_Entity::TypeId getEntityTypeId() {
-        static RS_Entity::TypeId typeId = -1;
-
-        if (typeId==-1) {
-            typeId = typeIdCounter++;
-        }
-
-        return typeId;
-    }
-    */
-
     static void registerEntityType(
         RS_Entity::TypeId typeId, 
         RS_DbsEntity* dbEntity

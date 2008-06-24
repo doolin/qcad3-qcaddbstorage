@@ -7,7 +7,6 @@
 
 void RS_DbsLine::registerType() {
     RS_DbsEntityRegistry::registerEntityType(RS_Line::getTypeIdStatic(), new RS_DbsLine());
-    //RS_DbsEntity::registerType();
 }
 
 
