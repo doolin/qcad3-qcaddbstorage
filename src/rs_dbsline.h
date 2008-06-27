@@ -6,6 +6,22 @@
 /**
  * Handles the DB storage for line entities.
  *
+ * Line entities are stored in a table with the following schema:
+ *
+ * The DB uses the following tables to store documents:
+ *
+ * \b Line
+ * - \b id: Entity ID.
+ * - \b x1: X ordiante of the start point.
+ * - \b y1: Y ordiante of the start point.
+ * - \b z1: Z ordiante of the start point.
+ * - \b x2: X ordiante of the end point.
+ * - \b y2: Y ordiante of the end point.
+ * - \b z2: Z ordiante of the end point.
+ *
+ * The \b Line table stores data that is specific to line entities.
+ * Common data for all entities is stored in table \b Entity.
+ *
  * \author Andrew Mustun
  * \ingroup qcaddbstorage
  */
