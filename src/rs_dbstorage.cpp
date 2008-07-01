@@ -1,5 +1,6 @@
 #include "RS_Debug"
 #include "RS_DbStorage"
+#include "RS_DbException"
 #include "RS_DbsEntity"
 #include "RS_DbsEntityRegistry"
 
@@ -230,7 +231,14 @@ RS_PassiveTransaction RS_DbStorage::getTransaction(int transactionId) {
         "FROM TransactionLog "
         "WHERE id=?"
     );
-    std::string text = cmd1.executeString();
+    
+    std::string text;
+    try {
+        text = cmd1.executeString();
+    }
+    catch (RS_DbException e) {
+        text = "";
+    }
 
     // look up list of affected entities:
     RS_DbCommand cmd2(
