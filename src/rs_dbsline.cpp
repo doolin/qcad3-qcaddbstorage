@@ -28,6 +28,16 @@ void RS_DbsLine::initDb(RS_DbConnection& db) {
 
 
 RS_Entity* RS_DbsLine::instantiate(RS_DbConnection& db, RS_Entity::Id entityId) {
+    RS_LineData data;
+    readEntityData(db, data, entityId);
+    return new RS_Line(data, entityId);
+}
+
+
+
+void RS_DbsLine::readEntityData(RS_DbConnection& db, RS_LineData& data, RS_Entity::Id entityId) {
+    RS_DbsEntity::readEntityData(db, data, entityId);
+
     RS_DbCommand cmd(
         db, 
         "SELECT x1,y1,z1,x2,y2,z2 "
@@ -38,18 +48,17 @@ RS_Entity* RS_DbsLine::instantiate(RS_DbConnection& db, RS_Entity::Id entityId) 
 
 	RS_DbReader reader = cmd.executeReader();
 	if (!reader.read()) {
-        return NULL;
+        RS_Debug::error("RS_DbsLine::readEntityData: "
+            "cannot read data for entity %d", entityId);
+        return;
     }
 
-    RS_LineData data;
     data.startPoint.x = reader.getDouble(0);
     data.startPoint.y = reader.getDouble(1);
     data.startPoint.z = reader.getDouble(2);
     data.endPoint.x = reader.getDouble(3);
     data.endPoint.y = reader.getDouble(4);
     data.endPoint.z = reader.getDouble(5);
-
-    return new RS_Line(data, entityId);
 }
 
 

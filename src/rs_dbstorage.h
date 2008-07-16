@@ -56,6 +56,15 @@ public:
 
     virtual std::list<RS_Entity::Id> queryAll();
     virtual RS_Entity* queryEntity(RS_Entity::Id entityId);
+
+    virtual void clearSelection(
+        std::list<RS_Entity::Id>* affectedEntities=NULL
+    );
+    virtual void selectEntity(
+        RS_Entity::Id entityId, 
+        bool add=false, 
+        std::list<RS_Entity::Id>* affectedEntities=NULL
+    );
     
     virtual void save(RS_Entity& entity);
     virtual void deleteEntity(RS_Entity::Id entityId);

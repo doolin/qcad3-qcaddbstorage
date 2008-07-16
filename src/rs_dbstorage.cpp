@@ -22,6 +22,7 @@ RS_DbStorage::RS_DbStorage() {
             "type INTEGER, "
             "blockName VARCHAR, "
             "layerName VARCHAR, "
+            "selectionStatus INTEGER, "
             "undoStatus INTEGER"
         ");"
     );
@@ -119,8 +120,8 @@ RS_Entity* RS_DbStorage::queryEntity(RS_Entity::Id entityId) {
         
     return queryEntity(entityId, typeId);
 }
-
-
+    
+    
 
 /**
  * Internal function to query an entity if the type is already known.
@@ -129,10 +130,88 @@ RS_Entity* RS_DbStorage::queryEntity(RS_Entity::Id entityId, RS_Entity::TypeId t
     RS_DbsEntity* dbEntity = RS_DbsEntityRegistry::getDbEntity(typeId);
     if (dbEntity==NULL) {
         RS_Debug::error("RS_DbStorage::queryEntity: "
-            "no dbEntity object registered for entity type %d", typeId);
+            "no DB Entity object registered for entity type %d", typeId);
         return NULL;
     }
     return dbEntity->instantiate(db, entityId);
+}
+
+
+
+void RS_DbStorage::clearSelection(std::list<RS_Entity::Id>* affectedEntities) {
+    // find out which entities will be affected:
+    if (affectedEntities!=NULL) {
+        RS_DbCommand cmd(
+            db, 
+            "SELECT id "
+            "FROM Entity "
+            "WHERE selectionStatus=1"
+        );
+        RS_DbReader reader = cmd.executeReader();
+        while (reader.read()) {
+            affectedEntities->push_back(reader.getInt64(0));
+        }
+    }
+
+    RS_DbCommand cmd(
+        db, 
+        "UPDATE Entity "
+        "SET selectionStatus=0 "
+        "WHERE selectionStatus=1"
+    );
+    cmd.executeNonQuery();
+}
+
+
+
+void RS_DbStorage::selectEntity(
+    RS_Entity::Id entityId, bool add, 
+    std::list<RS_Entity::Id>* affectedEntities) {
+
+    if (add) {
+        // only the entity that is added to the selection is affected:
+        if (affectedEntities!=NULL) {
+            affectedEntities->push_back(entityId);
+        }
+
+        RS_DbCommand cmd(
+            db, 
+            "UPDATE Entity "
+            "SET selectionStatus=1 "
+            "WHERE id=?"
+        );
+        cmd.bind(1, entityId);
+        cmd.executeNonQuery();
+    }
+    else {
+        // find out which entities will be affected:
+        if (affectedEntities!=NULL) {
+            RS_DbCommand cmd(
+                db, 
+                "SELECT id "
+                "FROM Entity "
+                "WHERE (id=? AND selectionStatus=0) OR "
+                "      (id!=? AND selectionStatus=1)"
+            );
+            cmd.bind(1, entityId);
+            cmd.bind(2, entityId);
+	        RS_DbReader reader = cmd.executeReader();
+            while (reader.read()) {
+                affectedEntities->push_back(reader.getInt64(0));
+            }
+        }
+
+        RS_DbCommand cmd(
+            db, 
+            "UPDATE Entity "
+            "SET selectionStatus=NOT(selectionStatus) "
+            "WHERE (id=? AND selectionStatus=0) OR "
+            "      (id!=? AND selectionStatus=1)"
+        );
+        cmd.bind(1, entityId);
+        cmd.bind(2, entityId);
+        cmd.executeNonQuery();
+    }
 }
 
 
@@ -166,13 +245,14 @@ void RS_DbStorage::save(RS_Entity& entity) {
     // generic entity information has to be stored for all entity types:
     RS_DbCommand cmd(
         db, 
-        "INSERT INTO Entity VALUES(?,?,?,?,?);"
+        "INSERT INTO Entity VALUES(?,?,?,?,?,?);"
     );
     cmd.bind(1);
     cmd.bind(2, entity.getTypeId());
     cmd.bind(3);
     cmd.bind(4);
-    cmd.bind(5, 0);
+    cmd.bind(5, entity.isSelected());
+    cmd.bind(6, 0);
 	cmd.executeNonQuery();
     entity.setId(db.getLastInsertedRowId());
     

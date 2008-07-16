@@ -9,6 +9,7 @@ HEADERS = \
     ./src/rs_dbsentityregistry.h \
     ./src/rs_dbstorage.h
 SOURCES = \
+    ./src/rs_dbsentity.cpp \
     ./src/rs_dbsline.cpp \
     ./src/rs_dbsentityregistry.cpp \
     ./src/rs_dbstorage.cpp

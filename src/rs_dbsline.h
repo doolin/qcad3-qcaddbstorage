@@ -34,6 +34,7 @@ public:
 
     virtual void initDb(RS_DbConnection& db);
     virtual RS_Entity* instantiate(RS_DbConnection& db, RS_Entity::Id entityId);
+    virtual void readEntityData(RS_DbConnection& db, RS_LineData& data, RS_Entity::Id entityId);
     virtual void save(RS_DbConnection& db, RS_Entity& entity);
     virtual void deleteEntity(RS_DbConnection& db, RS_Entity::Id entityId);
 };

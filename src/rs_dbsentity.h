@@ -40,6 +40,8 @@ public:
     virtual void save(RS_DbConnection& db, RS_Entity& entity) = 0;
     
     virtual void deleteEntity(RS_DbConnection& db, RS_Entity::Id entityId) = 0;
+
+    virtual void readEntityData(RS_DbConnection& db, RS_EntityData& data, RS_Entity::Id entityId);
 };
 
 #endif
