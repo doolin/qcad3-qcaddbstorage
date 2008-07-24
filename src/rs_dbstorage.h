@@ -65,6 +65,8 @@ public:
         bool add=false, 
         std::list<RS_Entity::Id>* affectedEntities=NULL
     );
+
+    virtual RS_Region getBoundingBox();
     
     virtual void save(RS_Entity& entity);
     virtual void deleteEntity(RS_Entity::Id entityId);

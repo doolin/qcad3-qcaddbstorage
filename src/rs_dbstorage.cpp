@@ -23,7 +23,13 @@ RS_DbStorage::RS_DbStorage() {
             "blockName VARCHAR, "
             "layerName VARCHAR, "
             "selectionStatus INTEGER, "
-            "undoStatus INTEGER"
+            "undoStatus INTEGER, "
+            "minX REAL, "
+            "minY REAL, "
+            "minZ REAL, "
+            "maxX REAL, "
+            "maxY REAL, "
+            "maxZ REAL"
         ");"
     );
 
@@ -216,6 +222,34 @@ void RS_DbStorage::selectEntity(
 
 
 
+RS_Region RS_DbStorage::getBoundingBox() {
+    RS_DbCommand cmd(
+        db, 
+        "SELECT MIN(minX), MIN(minY), MIN(minZ), "
+        "       MAX(maxX), MAX(maxY), MAX(maxZ) "
+        "FROM Entity "
+        "WHERE undoStatus=0"
+    );
+    RS_DbReader reader = cmd.executeReader();
+
+    RS_Vector minV;
+    RS_Vector maxV;
+    
+    if (reader.read()) {
+        minV.x = reader.getDouble(0);
+        minV.y = reader.getDouble(1);
+        minV.z = reader.getDouble(2);
+        
+        maxV.x = reader.getDouble(3);
+        maxV.y = reader.getDouble(4);
+        maxV.z = reader.getDouble(5);
+    }
+
+    return RS_Region(minV, maxV);
+}
+
+
+
 int RS_DbStorage::getLastTransactionId() {
     RS_DbCommand cmd(
         db, 
@@ -245,14 +279,24 @@ void RS_DbStorage::save(RS_Entity& entity) {
     // generic entity information has to be stored for all entity types:
     RS_DbCommand cmd(
         db, 
-        "INSERT INTO Entity VALUES(?,?,?,?,?,?);"
+        "INSERT INTO Entity VALUES(?,?,?,?,?,?,?,?,?,?,?,?);"
     );
+
     cmd.bind(1);
     cmd.bind(2, entity.getTypeId());
     cmd.bind(3);
     cmd.bind(4);
     cmd.bind(5, entity.isSelected());
     cmd.bind(6, 0);
+
+    RS_Region boundingBox = entity.getBoundingBox();
+    cmd.bind(7, boundingBox.getX1());
+    cmd.bind(8, boundingBox.getY1());
+    cmd.bind(9, boundingBox.getZ1());
+    cmd.bind(10, boundingBox.getX2());
+    cmd.bind(11, boundingBox.getY2());
+    cmd.bind(12, boundingBox.getZ2());
+
 	cmd.executeNonQuery();
     entity.setId(db.getLastInsertedRowId());
     
