@@ -1,3 +1,5 @@
+exists( ../mkspecs/defs.pro ):include( ../mkspecs/defs.pro )
+
 TEMPLATE = lib
 DESTDIR = lib
 CONFIG -= qt
@@ -22,5 +24,3 @@ CONFIG(debug, debug|release) {
     TARGET = $$join(TARGET,,,_d)
     OBJECTS_DIR = $$join(OBJECTS_DIR,,,_d)
 }
-
-exists( ../mkspecs/defs.pro ):include( ../mkspecs/defs.pro )
