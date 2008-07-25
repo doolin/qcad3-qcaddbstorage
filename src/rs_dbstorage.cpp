@@ -122,7 +122,7 @@ RS_Entity* RS_DbStorage::queryEntity(RS_Entity::Id entityId) {
         return NULL;
     }
 
-    RS_Entity::TypeId typeId = reader.getInt64(0);
+    RS_Entity::TypeId typeId = (RS_Entity::TypeId)reader.getInt64(0);
         
     return queryEntity(entityId, typeId);
 }
@@ -257,7 +257,7 @@ int RS_DbStorage::getLastTransactionId() {
         "FROM LastTransaction"
     );
 
-    return cmd.executeInt64();
+    return cmd.executeInt();
 }
 
 
