@@ -1,6 +1,9 @@
 #ifndef RS_DBSTORAGE_H
 #define RS_DBSTORAGE_H
 
+#include <sstream>
+#include <set>
+
 #include "RS_PassiveTransaction"
 #include "RS_Storage"
 #include "RS_DbClient"
@@ -54,16 +57,21 @@ public:
     RS_DbStorage();
     virtual ~RS_DbStorage();
 
-    virtual std::list<RS_Entity::Id> queryAll();
+    virtual std::set<RS_Entity::Id> queryAll();
     virtual RS_Entity* queryEntity(RS_Entity::Id entityId);
 
     virtual void clearSelection(
-        std::list<RS_Entity::Id>* affectedEntities=NULL
+        std::set<RS_Entity::Id>* affectedEntities=NULL
     );
     virtual void selectEntity(
         RS_Entity::Id entityId, 
         bool add=false, 
-        std::list<RS_Entity::Id>* affectedEntities=NULL
+        std::set<RS_Entity::Id>* affectedEntities=NULL
+    );
+    virtual void selectEntities(
+        std::set<RS_Entity::Id>& entityIds, 
+        bool add=false, 
+        std::set<RS_Entity::Id>* affectedEntities=NULL
     );
 
     virtual RS_Region getBoundingBox();
@@ -81,11 +89,25 @@ public:
     virtual RS_PassiveTransaction getTransaction(int transactionId);
     virtual int getMaxTransactionId();
 
-    virtual void toggleUndoStatus(std::list<RS_Entity::Id>& entities);
+    virtual void toggleUndoStatus(std::set<RS_Entity::Id>& entities);
 
 protected:
     RS_Entity* queryEntity(RS_Entity::Id entityId, RS_Entity::TypeId typeId);
     RS_Entity::TypeId getEntityType(RS_Entity::Id entityId);
+
+    std::string getSqlList(std::set<RS_Entity::Id>& values) {
+        std::stringstream ss;
+        ss << "(";
+        std::set<RS_Entity::Id>::iterator it;
+        for (it=values.begin(); it!=values.end(); ++it) {
+            if (it!=values.begin()) {
+                ss << ",";
+            }
+            ss << (*it);
+        }
+        ss << ")";
+        return ss.str();
+    }
 
 private:
     //! connection to SQLite DB:

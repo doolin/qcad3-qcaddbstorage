@@ -87,8 +87,8 @@ RS_DbStorage::~RS_DbStorage() {
 
 
 
-std::list<RS_Entity::Id> RS_DbStorage::queryAll() {
-    std::list<RS_Entity::Id> ret;
+std::set<RS_Entity::Id> RS_DbStorage::queryAll() {
+    std::set<RS_Entity::Id> ret;
 			
     RS_DbCommand cmd(
         db, 
@@ -99,7 +99,7 @@ std::list<RS_Entity::Id> RS_DbStorage::queryAll() {
 
 	RS_DbReader reader = cmd.executeReader();
 	while (reader.read()) {
-        ret.push_back(reader.getInt64(0));
+        ret.insert(reader.getInt64(0));
     }
 
     return ret;
@@ -144,7 +144,7 @@ RS_Entity* RS_DbStorage::queryEntity(RS_Entity::Id entityId, RS_Entity::TypeId t
 
 
 
-void RS_DbStorage::clearSelection(std::list<RS_Entity::Id>* affectedEntities) {
+void RS_DbStorage::clearSelection(std::set<RS_Entity::Id>* affectedEntities) {
     // find out which entities will be affected:
     if (affectedEntities!=NULL) {
         RS_DbCommand cmd(
@@ -155,7 +155,7 @@ void RS_DbStorage::clearSelection(std::list<RS_Entity::Id>* affectedEntities) {
         );
         RS_DbReader reader = cmd.executeReader();
         while (reader.read()) {
-            affectedEntities->push_back(reader.getInt64(0));
+            affectedEntities->insert(reader.getInt64(0));
         }
     }
 
@@ -172,12 +172,12 @@ void RS_DbStorage::clearSelection(std::list<RS_Entity::Id>* affectedEntities) {
 
 void RS_DbStorage::selectEntity(
     RS_Entity::Id entityId, bool add, 
-    std::list<RS_Entity::Id>* affectedEntities) {
+    std::set<RS_Entity::Id>* affectedEntities) {
 
     if (add) {
         // only the entity that is added to the selection is affected:
         if (affectedEntities!=NULL) {
-            affectedEntities->push_back(entityId);
+            affectedEntities->insert(entityId);
         }
 
         RS_DbCommand cmd(
@@ -203,7 +203,7 @@ void RS_DbStorage::selectEntity(
             cmd.bind(2, entityId);
 	        RS_DbReader reader = cmd.executeReader();
             while (reader.read()) {
-                affectedEntities->push_back(reader.getInt64(0));
+                affectedEntities->insert(reader.getInt64(0));
             }
         }
 
@@ -218,6 +218,78 @@ void RS_DbStorage::selectEntity(
         cmd.bind(2, entityId);
         cmd.executeNonQuery();
     }
+}
+
+
+
+void RS_DbStorage::selectEntities(
+    std::set<RS_Entity::Id>& entityIds, 
+    bool add, 
+    std::set<RS_Entity::Id>* affectedEntities) {
+        
+    if (affectedEntities!=NULL) {
+        (*affectedEntities) = entityIds;
+    }
+
+    //if (add) {
+        // only the entities that are added to the selection are affected:
+        //if (affectedEntities!=NULL) {
+            //affectedEntities->insert(affectedEntities->begin(),myvector.begin(),myvector.end());
+            //affectedEntities->insert(entityId);
+        //    (*affectedEntities) = entityIds;
+        //}
+
+        /*
+        RS_DbCommand cmd(
+            db, 
+            std::string(
+                "UPDATE Entity "
+                "SET selectionStatus=1 "
+                "WHERE id IN "
+            ) + getSqlList(entityIds)
+        );
+        //cmd.bind(1, entityId);
+        cmd.executeNonQuery();
+        */
+    //}
+    //else {
+    if (!add) {
+        // find out which entities will be deselected:
+        if (affectedEntities!=NULL) {
+            //(*affectedEntities) = entityIds;
+
+            RS_DbCommand cmd(
+                db, 
+                "SELECT id "
+                "FROM Entity "
+                "WHERE selectionStatus=1"
+            );
+	        RS_DbReader reader = cmd.executeReader();
+            while (reader.read()) {
+                affectedEntities->insert(reader.getInt64(0));
+            }
+        }
+
+        // deselect all:
+        RS_DbCommand cmd(
+            db, 
+            "UPDATE Entity "
+            "SET selectionStatus=0 "
+            "WHERE selectionStatus=1"
+        );
+        cmd.executeNonQuery();
+    }
+
+    // select given entities:
+    RS_DbCommand cmd(
+        db, 
+        std::string(
+            "UPDATE Entity "
+            "SET selectionStatus=1 "
+            "WHERE id IN "
+        ) + getSqlList(entityIds)
+    );
+    cmd.executeNonQuery();
 }
 
 
@@ -331,9 +403,9 @@ void RS_DbStorage::saveTransaction(RS_ActiveTransaction& transaction) {
     cmd.bind(2, transaction.getText());
 	cmd.executeNonQuery();
 
-    // store the list of entities that are affected by the transaction:
-    std::list<RS_Entity::Id> affectedEntities = transaction.getAffectedEntities();
-    std::list<RS_Entity::Id>::iterator it;
+    // store the set of entities that are affected by the transaction:
+    std::set<RS_Entity::Id> affectedEntities = transaction.getAffectedEntities();
+    std::set<RS_Entity::Id>::iterator it;
     for (it=affectedEntities.begin(); it!=affectedEntities.end(); ++it) {
         RS_DbCommand cmd(
             db, 
@@ -364,7 +436,7 @@ RS_PassiveTransaction RS_DbStorage::getTransaction(int transactionId) {
         text = "";
     }
 
-    // look up list of affected entities:
+    // look up set of affected entities:
     RS_DbCommand cmd2(
         db, 
         "SELECT eid "
@@ -373,11 +445,11 @@ RS_PassiveTransaction RS_DbStorage::getTransaction(int transactionId) {
     );
     cmd2.bind(1, transactionId);
 
-    std::list<RS_Entity::Id> affectedEntities;
+    std::set<RS_Entity::Id> affectedEntities;
 
 	RS_DbReader reader = cmd2.executeReader();
 	while (reader.read()) {
-        affectedEntities.push_back(reader.getInt64(0));
+        affectedEntities.insert(reader.getInt64(0));
         RS_Debug::debug("RS_Transaction::RS_Transaction: "
             "affected entity: %d", reader.getInt64(0));
     }
@@ -432,8 +504,8 @@ int RS_DbStorage::getMaxTransactionId() {
     
     
     
-void RS_DbStorage::toggleUndoStatus(std::list<RS_Entity::Id>& entities) {
-    std::list<RS_Entity::Id>::iterator it;
+void RS_DbStorage::toggleUndoStatus(std::set<RS_Entity::Id>& entities) {
+    std::set<RS_Entity::Id>::iterator it;
     for (it=entities.begin(); it!=entities.end(); it++) {
         RS_Debug::debug("RS_DbStorage::undo: toggle entity: %d", *it);
 
