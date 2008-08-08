@@ -1,12 +1,12 @@
 #include "RS_DbsLine"
 #include "RS_DbClient"
-#include "RS_Line"
+#include "RS_LineEntity"
 #include "RS_DbsEntityRegistry"
 
 
 
 void RS_DbsLine::registerType() {
-    RS_DbsEntityRegistry::registerEntityType(RS_Line::getTypeIdStatic(), new RS_DbsLine());
+    RS_DbsEntityRegistry::registerEntityType(RS_LineEntity::getTypeIdStatic(), new RS_DbsLine());
 }
 
 
@@ -30,7 +30,7 @@ void RS_DbsLine::initDb(RS_DbConnection& db) {
 RS_Entity* RS_DbsLine::instantiate(RS_DbConnection& db, RS_Entity::Id entityId) {
     RS_LineData data;
     readEntityData(db, data, entityId);
-    return new RS_Line(data, entityId);
+    return new RS_LineEntity(data, entityId);
 }
 
 
@@ -64,7 +64,7 @@ void RS_DbsLine::readEntityData(RS_DbConnection& db, RS_LineData& data, RS_Entit
 
 
 void RS_DbsLine::save(RS_DbConnection& db, RS_Entity& entity) {
-    RS_Line& line = dynamic_cast<RS_Line&>(entity);
+    RS_LineEntity& line = dynamic_cast<RS_LineEntity&>(entity);
 
     RS_DbCommand cmd(
         db, 

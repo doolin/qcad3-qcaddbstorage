@@ -294,7 +294,7 @@ void RS_DbStorage::selectEntities(
 
 
 
-RS_Region RS_DbStorage::getBoundingBox() {
+RS_Box RS_DbStorage::getBoundingBox() {
     RS_DbCommand cmd(
         db, 
         "SELECT MIN(minX), MIN(minY), MIN(minZ), "
@@ -317,7 +317,7 @@ RS_Region RS_DbStorage::getBoundingBox() {
         maxV.z = reader.getDouble(5);
     }
 
-    return RS_Region(minV, maxV);
+    return RS_Box(minV, maxV);
 }
 
 
@@ -361,13 +361,15 @@ void RS_DbStorage::save(RS_Entity& entity) {
     cmd.bind(5, entity.isSelected());
     cmd.bind(6, 0);
 
-    RS_Region boundingBox = entity.getBoundingBox();
-    cmd.bind(7, boundingBox.getX1());
-    cmd.bind(8, boundingBox.getY1());
-    cmd.bind(9, boundingBox.getZ1());
-    cmd.bind(10, boundingBox.getX2());
-    cmd.bind(11, boundingBox.getY2());
-    cmd.bind(12, boundingBox.getZ2());
+    RS_Box boundingBox = entity.getBoundingBox();
+    RS_Vector c1 = boundingBox.getDefiningCorner1();
+    RS_Vector c2 = boundingBox.getDefiningCorner2();
+    cmd.bind(7, c1.x);
+    cmd.bind(8, c1.y);
+    cmd.bind(9, c1.z);
+    cmd.bind(10, c2.x);
+    cmd.bind(11, c2.y);
+    cmd.bind(12, c2.z);
 
 	cmd.executeNonQuery();
     entity.setId(db.getLastInsertedRowId());

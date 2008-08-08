@@ -74,7 +74,7 @@ public:
         std::set<RS_Entity::Id>* affectedEntities=NULL
     );
 
-    virtual RS_Region getBoundingBox();
+    virtual RS_Box getBoundingBox();
     
     virtual void save(RS_Entity& entity);
     virtual void deleteEntity(RS_Entity::Id entityId);
