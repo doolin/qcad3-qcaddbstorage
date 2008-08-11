@@ -95,19 +95,7 @@ protected:
     RS_Entity* queryEntity(RS_Entity::Id entityId, RS_Entity::TypeId typeId);
     RS_Entity::TypeId getEntityType(RS_Entity::Id entityId);
 
-    std::string getSqlList(std::set<RS_Entity::Id>& values) {
-        std::stringstream ss;
-        ss << "(";
-        std::set<RS_Entity::Id>::iterator it;
-        for (it=values.begin(); it!=values.end(); ++it) {
-            if (it!=values.begin()) {
-                ss << ",";
-            }
-            ss << (*it);
-        }
-        ss << ")";
-        return ss.str();
-    }
+    static std::string getSqlList(std::set<RS_Entity::Id>& values);
 
 private:
     //! connection to SQLite DB:

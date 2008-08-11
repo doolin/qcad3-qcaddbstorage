@@ -550,3 +550,26 @@ RS_Entity::TypeId RS_DbStorage::getEntityType(RS_Entity::Id entityId) {
     cmd.bind(1, entityId);
     return cmd.executeInt();
 }
+
+
+
+/**
+ * Helper function that turns the given list of IDs into an SQL
+ * string list.
+ *
+ * \return List of IDs as string for use in SQL queries. 
+ *      E.g. "(1,7,5,17)"
+ */
+std::string RS_DbStorage::getSqlList(std::set<RS_Entity::Id>& values) {
+    std::stringstream ss;
+    ss << "(";
+    std::set<RS_Entity::Id>::iterator it;
+    for (it=values.begin(); it!=values.end(); ++it) {
+        if (it!=values.begin()) {
+            ss << ",";
+        }
+        ss << (*it);
+    }
+    ss << ")";
+    return ss.str();
+}
