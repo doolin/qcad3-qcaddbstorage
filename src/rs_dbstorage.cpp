@@ -532,15 +532,21 @@ void RS_DbStorage::toggleUndoStatus(std::set<RS_Entity::Id>& entities) {
     for (it=entities.begin(); it!=entities.end(); it++) {
         RS_Debug::debug("RS_DbStorage::undo: toggle entity: %d", *it);
 
-        RS_DbCommand cmd(
-            db, 
-            "UPDATE Entity "
-            "SET undoStatus=NOT(undoStatus) "
-            "WHERE id=?"
-        );
-        cmd.bind(1, *it);
-    	cmd.executeNonQuery();
+        toggleUndoStatus(*it);
     }
+}
+
+
+
+void RS_DbStorage::toggleUndoStatus(RS_Entity::Id entityId) {
+    RS_DbCommand cmd(
+        db, 
+        "UPDATE Entity "
+        "SET undoStatus=NOT(undoStatus) "
+        "WHERE id=?"
+    );
+    cmd.bind(1, entityId);
+    cmd.executeNonQuery();
 }
     
     

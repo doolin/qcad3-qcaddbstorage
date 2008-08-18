@@ -90,7 +90,8 @@ public:
     virtual RS_PassiveTransaction getTransaction(int transactionId);
     virtual int getMaxTransactionId();
 
-    virtual void toggleUndoStatus(std::set<RS_Entity::Id>& entities);
+    virtual void toggleUndoStatus(std::set<RS_Entity::Id>& entityIds);
+    virtual void toggleUndoStatus(RS_Entity::Id entityId);
 
 protected:
     RS_Entity* queryEntity(RS_Entity::Id entityId, RS_Entity::TypeId typeId);
