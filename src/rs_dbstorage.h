@@ -58,6 +58,7 @@ public:
     virtual ~RS_DbStorage();
 
     virtual std::set<RS_Entity::Id> queryAll();
+    virtual std::set<RS_Entity::Id> querySelected();
     virtual RS_Entity* queryEntity(RS_Entity::Id entityId);
 
     virtual void clearSelection(

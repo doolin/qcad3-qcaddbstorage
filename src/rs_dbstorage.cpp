@@ -107,6 +107,27 @@ std::set<RS_Entity::Id> RS_DbStorage::queryAll() {
 
 
 
+std::set<RS_Entity::Id> RS_DbStorage::querySelected() {
+    std::set<RS_Entity::Id> ret;
+			
+    RS_DbCommand cmd(
+        db, 
+        "SELECT id "
+        "FROM Entity "
+        "WHERE BlockName IS NULL "
+        "   AND selectionStatus=1"
+    );
+
+	RS_DbReader reader = cmd.executeReader();
+	while (reader.read()) {
+        ret.insert(reader.getInt64(0));
+    }
+
+    return ret;
+}
+
+
+
 RS_Entity* RS_DbStorage::queryEntity(RS_Entity::Id entityId) {
     // query entity type:
     RS_DbCommand cmd(
