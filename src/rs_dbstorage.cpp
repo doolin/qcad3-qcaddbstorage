@@ -11,10 +11,10 @@
  */
 RS_DbStorage::RS_DbStorage() {
     // creates the DB in a private temporary file on disk (for debugging):
-    db.open("g.db");
+    //db.open("g.db");
     
     // creates the DB in memory (production):
-    //db.open(":memory:");
+    db.open(":memory:");
 
     db.executeNonQuery(
         "CREATE TABLE Entity("
