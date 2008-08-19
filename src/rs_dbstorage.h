@@ -92,6 +92,7 @@ public:
 
     virtual void toggleUndoStatus(std::set<RS_Entity::Id>& entityIds);
     virtual void toggleUndoStatus(RS_Entity::Id entityId);
+    virtual bool getUndoStatus(RS_Entity::Id entityId);
 
 protected:
     RS_Entity* queryEntity(RS_Entity::Id entityId, RS_Entity::TypeId typeId);

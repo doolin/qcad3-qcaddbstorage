@@ -11,10 +11,10 @@
  */
 RS_DbStorage::RS_DbStorage() {
     // creates the DB in a private temporary file on disk (for debugging):
-    //db.open("g.db");
+    db.open("g.db");
     
     // creates the DB in memory (production):
-    db.open(":memory:");
+    //db.open(":memory:");
 
     db.executeNonQuery(
         "CREATE TABLE Entity("
@@ -483,6 +483,8 @@ RS_PassiveTransaction RS_DbStorage::getTransaction(int transactionId) {
     
     
 void RS_DbStorage::deleteTransactionsFrom(int transactionId) {
+    RS_Debug::debug("RS_DbStorage::deleteTransactionsFrom: transactionId: %d", transactionId);
+
     // delete orphaned entities:
     RS_DbCommand cmd3(
         db, 
@@ -493,7 +495,22 @@ void RS_DbStorage::deleteTransactionsFrom(int transactionId) {
     cmd3.bind(1, transactionId);
 	RS_DbReader reader = cmd3.executeReader();
 	while (reader.read()) {
-        deleteEntity(reader.getInt64(0));
+        // check if there are transactions we are keeping which still refer to the
+        // entity in question:
+        RS_DbCommand cmd4(
+            db, 
+            "SELECT eid "
+            "FROM TransactionEntity "
+            "WHERE tid<? AND eid=?"
+        );
+        cmd4.bind(1, transactionId);
+        cmd4.bind(2, reader.getInt64(0));
+        RS_DbReader reader4 = cmd4.executeReader();
+        if (reader4.read()==false) {
+        //if (getUndoStatus(reader.getInt64(0))==true) {
+            RS_Debug::debug("RS_DbStorage::deleteTransactionsFrom: deleteEntity: %d", reader.getInt64(0));
+            deleteEntity(reader.getInt64(0));
+        }
     }
 
     // delete records of affected entities of the transaction:
@@ -520,7 +537,8 @@ void RS_DbStorage::deleteTransactionsFrom(int transactionId) {
 int RS_DbStorage::getMaxTransactionId() {
     RS_DbCommand cmd(
         db, 
-        "SELECT max(id) FROM TransactionLog"
+        "SELECT max(id) "
+        "FROM TransactionLog"
     );
     return cmd.executeInt();
 }
@@ -547,6 +565,19 @@ void RS_DbStorage::toggleUndoStatus(RS_Entity::Id entityId) {
     );
     cmd.bind(1, entityId);
     cmd.executeNonQuery();
+}
+
+
+
+bool RS_DbStorage::getUndoStatus(RS_Entity::Id entityId) {
+    RS_DbCommand cmd(
+        db, 
+        "SELECT undoStatus "
+        "FROM Entity "
+        "WHERE id=?"
+    );
+    cmd.bind(1, entityId);
+    return (bool)cmd.executeInt();
 }
     
     
