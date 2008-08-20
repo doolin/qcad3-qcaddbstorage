@@ -31,6 +31,7 @@ class RS_DbsEntity;
 class RS_DbsEntityRegistry {
 public:
     static void registerStandardEntityTypes();
+    static void cleanUp();
     
     static void registerEntityType(
         RS_Entity::TypeId typeId, 

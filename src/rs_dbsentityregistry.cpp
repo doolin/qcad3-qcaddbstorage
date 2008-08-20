@@ -82,3 +82,15 @@ void RS_DbsEntityRegistry::deleteEntity(RS_DbConnection& db, RS_Entity::TypeId t
     dbEntities[typeId]->deleteEntity(db, entityId);
 }
 
+
+/**
+ * Cleans up all known entity types. Call this at the end of an application,
+ * just before the application is terminated.
+ */
+void RS_DbsEntityRegistry::cleanUp() {
+    std::map<RS_Entity::TypeId, RS_DbsEntity*>::iterator it;
+    for (it=dbEntities.begin(); it!=dbEntities.end(); it++) {
+        delete (it->second);
+    }
+    dbEntities.clear();
+}
