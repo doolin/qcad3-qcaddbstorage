@@ -13,8 +13,8 @@ void RS_DbsEntity::readEntityData(RS_DbConnection& db, RS_EntityData& data, RS_E
     );
     cmd.bind(1, entityId);
 
-	RS_DbReader reader = cmd.executeReader();
-	if (!reader.read()) {
+    RS_DbReader reader = cmd.executeReader();
+    if (!reader.read()) {
         RS_Debug::error("RS_DbsEntity::readEntityData: "
             "cannot read data for entity %d", entityId);
         return;

@@ -46,8 +46,8 @@ void RS_DbsLine::readEntityData(RS_DbConnection& db, RS_LineData& data, RS_Entit
     );
     cmd.bind(1, entityId);
 
-	RS_DbReader reader = cmd.executeReader();
-	if (!reader.read()) {
+    RS_DbReader reader = cmd.executeReader();
+    if (!reader.read()) {
         RS_Debug::error("RS_DbsLine::readEntityData: "
             "cannot read data for entity %d", entityId);
         return;
@@ -79,7 +79,7 @@ void RS_DbsLine::save(RS_DbConnection& db, RS_Entity& entity) {
     cmd.bind(5, data.endPoint.x);
     cmd.bind(6, data.endPoint.y);
     cmd.bind(7, data.endPoint.z);
-	cmd.executeNonQuery();
+    cmd.executeNonQuery();
 }
 
 

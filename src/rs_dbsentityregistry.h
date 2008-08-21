@@ -13,17 +13,25 @@ class RS_DbsEntity;
 
 /**
  * Registry of all available entity types. If your library or
- * application adds custom entity types they need to be registered
- * with this class for example with:
+ * application adds custom entity types, a DB storage class needs 
+ * to be registered for them. For example:
  * 
  * \code
- * RS_EntityRegistry::registerEntityType(100, RS_MyEntity::initDb, RS_MyEntity::factory); 
+ * RS_EntityRegistry::registerEntityType(100, new RS_DbsMyEntityType()); 
  * \endcode
+ *
+ * Where \c RS_DbsMyEntityType implementd RS_DbsEntityType.
  * 
  * This registration is usually done from within a static method 
- * inside the custom entity class. initDb() is a static function that
- * initializes the DB for storing entities of the custom type.
- * factory() is a function that creates entities of that type.
+ * inside the custom entity class. For example:
+ *
+ * \code
+ * RS_DbsMyEntityType::registerType();
+ *
+ * void RS_DbsMyEntityType::registerType() {
+ *     RS_DbsEntityRegistry::registerEntityType(new RS_DbsMyEntityType());
+ * }
+ * \endcode
  *
  * \author Andrew Mustun
  * \ingroup qcadcore

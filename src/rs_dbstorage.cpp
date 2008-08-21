@@ -71,7 +71,7 @@ RS_DbStorage::RS_DbStorage() {
         "INSERT INTO LastTransaction VALUES(?);"
     );
     cmd.bind(1, -1);
-	cmd.executeNonQuery();
+    cmd.executeNonQuery();
  
     RS_DbsEntityRegistry::initDb(db);
 }
@@ -89,7 +89,7 @@ RS_DbStorage::~RS_DbStorage() {
 
 std::set<RS_Entity::Id> RS_DbStorage::queryAll() {
     std::set<RS_Entity::Id> ret;
-			
+            
     RS_DbCommand cmd(
         db, 
         "SELECT id "
@@ -97,8 +97,8 @@ std::set<RS_Entity::Id> RS_DbStorage::queryAll() {
         "WHERE BlockName IS NULL"
     );
 
-	RS_DbReader reader = cmd.executeReader();
-	while (reader.read()) {
+    RS_DbReader reader = cmd.executeReader();
+    while (reader.read()) {
         ret.insert(reader.getInt64(0));
     }
 
@@ -109,7 +109,7 @@ std::set<RS_Entity::Id> RS_DbStorage::queryAll() {
 
 std::set<RS_Entity::Id> RS_DbStorage::querySelected() {
     std::set<RS_Entity::Id> ret;
-			
+            
     RS_DbCommand cmd(
         db, 
         "SELECT id "
@@ -118,8 +118,8 @@ std::set<RS_Entity::Id> RS_DbStorage::querySelected() {
         "   AND selectionStatus=1"
     );
 
-	RS_DbReader reader = cmd.executeReader();
-	while (reader.read()) {
+    RS_DbReader reader = cmd.executeReader();
+    while (reader.read()) {
         ret.insert(reader.getInt64(0));
     }
 
@@ -139,7 +139,7 @@ RS_Entity* RS_DbStorage::queryEntity(RS_Entity::Id entityId) {
     cmd.bind(1, entityId);
 
     RS_DbReader reader = cmd.executeReader();
-	if (!reader.read()) {
+    if (!reader.read()) {
         return NULL;
     }
 
@@ -222,7 +222,7 @@ void RS_DbStorage::selectEntity(
             );
             cmd.bind(1, entityId);
             cmd.bind(2, entityId);
-	        RS_DbReader reader = cmd.executeReader();
+            RS_DbReader reader = cmd.executeReader();
             while (reader.read()) {
                 affectedEntities->insert(reader.getInt64(0));
             }
@@ -285,7 +285,7 @@ void RS_DbStorage::selectEntities(
                 "FROM Entity "
                 "WHERE selectionStatus=1"
             );
-	        RS_DbReader reader = cmd.executeReader();
+            RS_DbReader reader = cmd.executeReader();
             while (reader.read()) {
                 affectedEntities->insert(reader.getInt64(0));
             }
@@ -362,7 +362,7 @@ void RS_DbStorage::setLastTransactionId(int tid) {
         "SET lastTransaction=?"
     );
     cmd.bind(1, tid);
-	cmd.executeNonQuery();
+    cmd.executeNonQuery();
 }
 
     
@@ -392,7 +392,7 @@ void RS_DbStorage::save(RS_Entity& entity) {
     cmd.bind(11, c2.y);
     cmd.bind(12, c2.z);
 
-	cmd.executeNonQuery();
+    cmd.executeNonQuery();
     entity.setId(db.getLastInsertedRowId());
     
     // look up storage object in entity registry:
@@ -424,7 +424,7 @@ void RS_DbStorage::saveTransaction(RS_ActiveTransaction& transaction) {
     );
     cmd.bind(1, transaction.getId());
     cmd.bind(2, transaction.getText());
-	cmd.executeNonQuery();
+    cmd.executeNonQuery();
 
     // store the set of entities that are affected by the transaction:
     std::set<RS_Entity::Id> affectedEntities = transaction.getAffectedEntities();
@@ -470,8 +470,8 @@ RS_PassiveTransaction RS_DbStorage::getTransaction(int transactionId) {
 
     std::set<RS_Entity::Id> affectedEntities;
 
-	RS_DbReader reader = cmd2.executeReader();
-	while (reader.read()) {
+    RS_DbReader reader = cmd2.executeReader();
+    while (reader.read()) {
         affectedEntities.insert(reader.getInt64(0));
         RS_Debug::debug("RS_Transaction::RS_Transaction: "
             "affected entity: %d", reader.getInt64(0));
@@ -493,8 +493,8 @@ void RS_DbStorage::deleteTransactionsFrom(int transactionId) {
         "WHERE tid>=?"
     );
     cmd3.bind(1, transactionId);
-	RS_DbReader reader = cmd3.executeReader();
-	while (reader.read()) {
+    RS_DbReader reader = cmd3.executeReader();
+    while (reader.read()) {
         // check if there are transactions we are keeping which still refer to the
         // entity in question:
         RS_DbCommand cmd4(
