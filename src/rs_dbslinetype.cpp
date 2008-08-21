@@ -1,17 +1,17 @@
-#include "RS_DbsLine"
+#include "RS_DbsLineType"
 #include "RS_DbClient"
 #include "RS_LineEntity"
-#include "RS_DbsEntityRegistry"
+#include "RS_DbsEntityTypeRegistry"
 
 
 
-void RS_DbsLine::registerType() {
-    RS_DbsEntityRegistry::registerEntityType(RS_LineEntity::getTypeIdStatic(), new RS_DbsLine());
+void RS_DbsLineType::registerType() {
+    RS_DbsEntityTypeRegistry::registerEntityType(RS_LineEntity::getTypeIdStatic(), new RS_DbsLineType());
 }
 
 
 
-void RS_DbsLine::initDb(RS_DbConnection& db) {
+void RS_DbsLineType::initDb(RS_DbConnection& db) {
     db.executeNonQuery(
         "CREATE TABLE Line("
             "id INT PRIMARY KEY, "
@@ -27,7 +27,7 @@ void RS_DbsLine::initDb(RS_DbConnection& db) {
 
 
 
-RS_Entity* RS_DbsLine::instantiate(RS_DbConnection& db, RS_Entity::Id entityId) {
+RS_Entity* RS_DbsLineType::instantiate(RS_DbConnection& db, RS_Entity::Id entityId) {
     RS_LineData data;
     readEntityData(db, data, entityId);
     return new RS_LineEntity(data, entityId);
@@ -35,8 +35,8 @@ RS_Entity* RS_DbsLine::instantiate(RS_DbConnection& db, RS_Entity::Id entityId) 
 
 
 
-void RS_DbsLine::readEntityData(RS_DbConnection& db, RS_LineData& data, RS_Entity::Id entityId) {
-    RS_DbsEntity::readEntityData(db, data, entityId);
+void RS_DbsLineType::readEntityData(RS_DbConnection& db, RS_LineData& data, RS_Entity::Id entityId) {
+    RS_DbsEntityType::readEntityData(db, data, entityId);
 
     RS_DbCommand cmd(
         db, 
@@ -48,7 +48,7 @@ void RS_DbsLine::readEntityData(RS_DbConnection& db, RS_LineData& data, RS_Entit
 
     RS_DbReader reader = cmd.executeReader();
     if (!reader.read()) {
-        RS_Debug::error("RS_DbsLine::readEntityData: "
+        RS_Debug::error("RS_DbsLineType::readEntityData: "
             "cannot read data for entity %d", entityId);
         return;
     }
@@ -63,7 +63,7 @@ void RS_DbsLine::readEntityData(RS_DbConnection& db, RS_LineData& data, RS_Entit
 
 
 
-void RS_DbsLine::save(RS_DbConnection& db, RS_Entity& entity) {
+void RS_DbsLineType::save(RS_DbConnection& db, RS_Entity& entity) {
     RS_LineEntity& line = dynamic_cast<RS_LineEntity&>(entity);
 
     RS_DbCommand cmd(
@@ -84,7 +84,7 @@ void RS_DbsLine::save(RS_DbConnection& db, RS_Entity& entity) {
 
 
 
-void RS_DbsLine::deleteEntity(RS_DbConnection& db, RS_Entity::Id entityId) {
+void RS_DbsLineType::deleteEntity(RS_DbConnection& db, RS_Entity::Id entityId) {
     RS_DbCommand cmd(
         db, 
         "DELETE FROM Line "

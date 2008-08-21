@@ -1,4 +1,4 @@
-#include "RS_DbsEntity"
+#include "RS_DbsEntityType"
 #include "RS_LineEntity"
 
 
@@ -25,10 +25,10 @@
  * \author Andrew Mustun
  * \ingroup qcaddbstorage
  */
-class RS_DbsLine : public RS_DbsEntity {
+class RS_DbsLineType : public RS_DbsEntityType {
 public:
-    RS_DbsLine() : RS_DbsEntity() {}
-    virtual ~RS_DbsLine() {}
+    RS_DbsLineType() : RS_DbsEntityType() {}
+    virtual ~RS_DbsLineType() {}
     
     static void registerType();
 

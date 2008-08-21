@@ -7,7 +7,7 @@
 #include "RS_Debug"
 
 class RS_DbConnection;
-class RS_DbsEntity;
+class RS_DbsEntityType;
 
 
 
@@ -20,40 +20,42 @@ class RS_DbsEntity;
  * RS_EntityRegistry::registerEntityType(100, new RS_DbsMyEntityType()); 
  * \endcode
  *
- * Where \c RS_DbsMyEntityType implementd RS_DbsEntityType.
+ * Where \c RS_DbsMyEntityType implements RS_DbsEntityType.
  * 
  * This registration is usually done from within a static method 
- * inside the custom entity class. For example:
+ * inside the custom entity class, for example:
  *
  * \code
- * RS_DbsMyEntityType::registerType();
+ * void main() {
+ *     RS_DbsMyEntityType::registerType();
+ * }
  *
  * void RS_DbsMyEntityType::registerType() {
- *     RS_DbsEntityRegistry::registerEntityType(new RS_DbsMyEntityType());
+ *     RS_DbsEntityTypeRegistry::registerEntityType(new RS_DbsMyEntityType());
  * }
  * \endcode
  *
  * \author Andrew Mustun
  * \ingroup qcadcore
  */
-class RS_DbsEntityRegistry {
+class RS_DbsEntityTypeRegistry {
 public:
     static void registerStandardEntityTypes();
     static void cleanUp();
     
     static void registerEntityType(
         RS_Entity::TypeId typeId, 
-        RS_DbsEntity* dbEntity
+        RS_DbsEntityType* dbEntity
     );
 
     static void initDb(RS_DbConnection& db);
 
-    static RS_DbsEntity* getDbEntity(RS_Entity::TypeId typeId);
+    static RS_DbsEntityType* getDbEntity(RS_Entity::TypeId typeId);
 
     static void deleteEntity(RS_DbConnection& db, RS_Entity::TypeId typeId, RS_Entity::Id entityId);
 
 private:
-    static std::map<RS_Entity::TypeId, RS_DbsEntity*> dbEntities;
+    static std::map<RS_Entity::TypeId, RS_DbsEntityType*> dbEntities;
     static RS_Entity::TypeId typeIdCounter;
 };
 

@@ -6,14 +6,14 @@ CONFIG -= qt
 CONFIG += staticlib warn_on
 
 HEADERS = \
-    ./src/rs_dbsentity.h \
-    ./src/rs_dbsline.h \
-    ./src/rs_dbsentityregistry.h \
+    ./src/rs_dbsentitytype.h \
+    ./src/rs_dbslinetype.h \
+    ./src/rs_dbsentitytyperegistry.h \
     ./src/rs_dbstorage.h
 SOURCES = \
-    ./src/rs_dbsentity.cpp \
-    ./src/rs_dbsline.cpp \
-    ./src/rs_dbsentityregistry.cpp \
+    ./src/rs_dbsentitytype.cpp \
+    ./src/rs_dbslinetype.cpp \
+    ./src/rs_dbsentitytyperegistry.cpp \
     ./src/rs_dbstorage.cpp
 
 TARGET = qcaddbstorage

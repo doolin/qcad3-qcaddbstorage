@@ -1,8 +1,8 @@
 #include "RS_Debug"
 #include "RS_DbStorage"
 #include "RS_DbException"
-#include "RS_DbsEntity"
-#include "RS_DbsEntityRegistry"
+#include "RS_DbsEntityType"
+#include "RS_DbsEntityTypeRegistry"
 
 
 
@@ -73,7 +73,7 @@ RS_DbStorage::RS_DbStorage() {
     cmd.bind(1, -1);
     cmd.executeNonQuery();
  
-    RS_DbsEntityRegistry::initDb(db);
+    RS_DbsEntityTypeRegistry::initDb(db);
 }
 
 
@@ -154,7 +154,7 @@ RS_Entity* RS_DbStorage::queryEntity(RS_Entity::Id entityId) {
  * Internal function to query an entity if the type is already known.
  */
 RS_Entity* RS_DbStorage::queryEntity(RS_Entity::Id entityId, RS_Entity::TypeId typeId) {
-    RS_DbsEntity* dbEntity = RS_DbsEntityRegistry::getDbEntity(typeId);
+    RS_DbsEntityType* dbEntity = RS_DbsEntityTypeRegistry::getDbEntity(typeId);
     if (dbEntity==NULL) {
         RS_Debug::error("RS_DbStorage::queryEntity: "
             "no DB Entity object registered for entity type %d", typeId);
@@ -396,7 +396,7 @@ void RS_DbStorage::save(RS_Entity& entity) {
     entity.setId(db.getLastInsertedRowId());
     
     // look up storage object in entity registry:
-    RS_DbsEntity* dbEntity = RS_DbsEntityRegistry::getDbEntity(entity.getTypeId());
+    RS_DbsEntityType* dbEntity = RS_DbsEntityTypeRegistry::getDbEntity(entity.getTypeId());
 
     // store entity:
     dbEntity->save(db, entity);
@@ -585,7 +585,7 @@ bool RS_DbStorage::getUndoStatus(RS_Entity::Id entityId) {
 void RS_DbStorage::deleteEntity(RS_Entity::Id entityId) {
     RS_Entity::TypeId typeId = getEntityType(entityId);
 
-    RS_DbsEntityRegistry::deleteEntity(db, typeId, entityId);
+    RS_DbsEntityTypeRegistry::deleteEntity(db, typeId, entityId);
 
     RS_DbCommand cmd(
         db, 

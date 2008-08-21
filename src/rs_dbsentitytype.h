@@ -2,7 +2,7 @@
 #define RS_DBENTITY_H
 
 #include "RS_Entity"
-#include "RS_DbsEntityRegistry"
+#include "RS_DbsEntityTypeRegistry"
 
 class RS_DbConnection;
 
@@ -10,16 +10,16 @@ class RS_DbConnection;
 
 /**
  * This interface must be implemented by classes that handle the 
- * DB storage for an entity class. The purpose of such classes
+ * DB storage for an entity type. The purpose of such classes
  * is to separate storage from the entity implementation.
  *
  * \author Andrew Mustun
  * \ingroup qcaddbstorage
  */
-class RS_DbsEntity {
+class RS_DbsEntityType {
 public:
-    RS_DbsEntity() {}
-    virtual ~RS_DbsEntity() {}
+    RS_DbsEntityType() {}
+    virtual ~RS_DbsEntityType() {}
 
     /**
      * Initializes the DB for this entity type (creating tables, etc.).
