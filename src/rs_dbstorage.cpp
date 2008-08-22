@@ -577,7 +577,7 @@ bool RS_DbStorage::getUndoStatus(RS_Entity::Id entityId) {
         "WHERE id=?"
     );
     cmd.bind(1, entityId);
-    return (bool)cmd.executeInt();
+    return (cmd.executeInt()!=0);
 }
     
     
