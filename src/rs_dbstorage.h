@@ -5,7 +5,7 @@
 #include <set>
 
 #include "RS_PassiveTransaction"
-#include "RS_Storage"
+#include "RS_AbstractStorage"
 #include "RS_DbClient"
 
 
@@ -52,7 +52,7 @@
  * \author Andrew Mustun
  * \ingroup qcaddbstorage
  */
-class RS_DbStorage : public RS_Storage {
+class RS_DbStorage : public RS_AbstractStorage {
 public:
     RS_DbStorage();
     virtual ~RS_DbStorage();
