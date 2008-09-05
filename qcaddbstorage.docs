@@ -2,7 +2,7 @@
 
 \addtogroup qcaddbstorage qcaddbstorage: DB Storage Module
 
-\brief This module implements a \ref RS_Storage "storage" that uses an 
+\brief This module implements a \ref RS_AbstractStorage "storage" that uses an 
 SQLite DB instance to store CAD documents.
 
 */
