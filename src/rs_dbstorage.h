@@ -4,7 +4,7 @@
 #include <sstream>
 #include <set>
 
-#include "RS_PassiveTransaction"
+#include "RS_Transaction"
 #include "RS_AbstractStorage"
 #include "RS_DbClient"
 
@@ -29,11 +29,11 @@
  * The type specific data is stored in a different table, for example the
  * data that is specific to line entities is stored in table \b Line.
  *
- * \b TransactionLog
+ * \b Transaction
  * - \b id: Log entry ID.
  * - \b text: Description of transaction.
  *
- * The \b TransactionLog table is used for the undo/redo mechanism.
+ * The \b Transaction table is used for the undo/redo mechanism.
  *
  * \b TransactionEntity
  * - \b tid: Transaction log entry ID.
@@ -54,11 +54,19 @@
  */
 class RS_DbStorage : public RS_AbstractStorage {
 public:
-    RS_DbStorage();
+    enum ObjectType {
+        objectTypeEntity = 0,
+        objectTypeLayer = 1,
+        objectTypeUcs = 2
+    };
+
+public:
+    RS_DbStorage(const std::string& fileName = ":memory:");
     virtual ~RS_DbStorage();
 
     virtual std::set<RS_Entity::Id> queryAll();
     virtual std::set<RS_Entity::Id> querySelected();
+    virtual RS_Object* queryObject(RS_Object::Id objectId);
     virtual RS_Entity* queryEntity(RS_Entity::Id entityId);
 
     virtual void clearSelection(
@@ -77,7 +85,9 @@ public:
 
     virtual RS_Box getBoundingBox();
     
-    virtual void save(RS_Entity& entity);
+    virtual void saveObject(RS_Object& entity);
+    // todo: protected:
+    virtual void saveEntity(RS_Entity& entity, bool isNew);
     virtual void deleteEntity(RS_Entity::Id entityId);
     
     virtual void beginTransaction();
@@ -85,20 +95,20 @@ public:
     
     virtual int getLastTransactionId();
     virtual void setLastTransactionId(int transactionId);
-    virtual void saveTransaction(RS_ActiveTransaction& transaction);;
+    virtual void saveTransaction(RS_Transaction& transaction);;
     virtual void deleteTransactionsFrom(int transactionId);
-    virtual RS_PassiveTransaction getTransaction(int transactionId);
+    virtual RS_Transaction getTransaction(int transactionId);
     virtual int getMaxTransactionId();
 
-    virtual void toggleUndoStatus(std::set<RS_Entity::Id>& entityIds);
-    virtual void toggleUndoStatus(RS_Entity::Id entityId);
-    virtual bool getUndoStatus(RS_Entity::Id entityId);
+    virtual void toggleUndoStatus(std::set<RS_Object::Id>& objectIds);
+    virtual void toggleUndoStatus(RS_Object::Id objectId);
+    virtual bool getUndoStatus(RS_Object::Id objectId);
 
 protected:
-    RS_Entity* queryEntity(RS_Entity::Id entityId, RS_Entity::TypeId typeId);
-    RS_Entity::TypeId getEntityType(RS_Entity::Id entityId);
+    RS_Entity* queryEntity(RS_Entity::Id entityId, RS_Entity::EntityTypeId typeId);
+    RS_Entity::EntityTypeId getEntityType(RS_Entity::Id entityId);
 
-    static std::string getSqlList(std::set<RS_Entity::Id>& values);
+    static std::string getSqlList(std::set<RS_Object::Id>& values);
 
 private:
     //! connection to SQLite DB:

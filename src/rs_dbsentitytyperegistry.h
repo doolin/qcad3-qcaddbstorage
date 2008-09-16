@@ -44,19 +44,19 @@ public:
     static void cleanUp();
     
     static void registerEntityType(
-        RS_Entity::TypeId typeId, 
+        RS_Entity::EntityTypeId typeId, 
         RS_DbsEntityType* dbEntity
     );
 
     static void initDb(RS_DbConnection& db);
 
-    static RS_DbsEntityType* getDbEntity(RS_Entity::TypeId typeId);
+    static RS_DbsEntityType* getDbEntity(RS_Entity::EntityTypeId typeId);
 
-    static void deleteEntity(RS_DbConnection& db, RS_Entity::TypeId typeId, RS_Entity::Id entityId);
+    static void deleteEntity(RS_DbConnection& db, RS_Entity::EntityTypeId typeId, RS_Entity::Id entityId);
 
 private:
-    static std::map<RS_Entity::TypeId, RS_DbsEntityType*> dbEntities;
-    static RS_Entity::TypeId typeIdCounter;
+    static std::map<RS_Entity::EntityTypeId, RS_DbsEntityType*> dbEntities;
+    static RS_Entity::EntityTypeId typeIdCounter;
 };
 
 #endif

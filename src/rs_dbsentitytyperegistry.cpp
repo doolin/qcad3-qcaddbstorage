@@ -11,7 +11,7 @@
     
 
     
-std::map<RS_Entity::TypeId, RS_DbsEntityType*> RS_DbsEntityTypeRegistry::dbEntities;
+std::map<RS_Entity::EntityTypeId, RS_DbsEntityType*> RS_DbsEntityTypeRegistry::dbEntities;
 
 
 
@@ -36,7 +36,7 @@ void RS_DbsEntityTypeRegistry::registerStandardEntityTypes() {
  *      entity class which creates an entity by a given ID.
  */
 void RS_DbsEntityTypeRegistry::registerEntityType(
-    RS_Entity::TypeId typeId, 
+    RS_Entity::EntityTypeId typeId, 
     RS_DbsEntityType* dbEntity) {
 
     if (dbEntities.count(typeId)==0) {
@@ -55,7 +55,7 @@ void RS_DbsEntityTypeRegistry::registerEntityType(
  * must be registered before calling this function.
  */
 void RS_DbsEntityTypeRegistry::initDb(RS_DbConnection& db) {
-    std::map<RS_Entity::TypeId, RS_DbsEntityType*>::iterator it;
+    std::map<RS_Entity::EntityTypeId, RS_DbsEntityType*>::iterator it;
     for (it=dbEntities.begin(); it!=dbEntities.end(); it++) {
         it->second->initDb(db);
     }
@@ -67,7 +67,7 @@ void RS_DbsEntityTypeRegistry::initDb(RS_DbConnection& db) {
  * \return The factory function that can be used to produce entities of
  *      the given type or NULL.
  */
-RS_DbsEntityType* RS_DbsEntityTypeRegistry::getDbEntity(RS_Entity::TypeId typeId) {
+RS_DbsEntityType* RS_DbsEntityTypeRegistry::getDbEntity(RS_Entity::EntityTypeId typeId) {
     if (dbEntities.count(typeId)==1) {
         return dbEntities[typeId];
     }
@@ -78,7 +78,7 @@ RS_DbsEntityType* RS_DbsEntityTypeRegistry::getDbEntity(RS_Entity::TypeId typeId
     
     
     
-void RS_DbsEntityTypeRegistry::deleteEntity(RS_DbConnection& db, RS_Entity::TypeId typeId, RS_Entity::Id entityId) {
+void RS_DbsEntityTypeRegistry::deleteEntity(RS_DbConnection& db, RS_Entity::EntityTypeId typeId, RS_Entity::Id entityId) {
     dbEntities[typeId]->deleteEntity(db, entityId);
 }
 
@@ -88,7 +88,7 @@ void RS_DbsEntityTypeRegistry::deleteEntity(RS_DbConnection& db, RS_Entity::Type
  * just before the application is terminated.
  */
 void RS_DbsEntityTypeRegistry::cleanUp() {
-    std::map<RS_Entity::TypeId, RS_DbsEntityType*>::iterator it;
+    std::map<RS_Entity::EntityTypeId, RS_DbsEntityType*>::iterator it;
     for (it=dbEntities.begin(); it!=dbEntities.end(); it++) {
         delete (it->second);
     }

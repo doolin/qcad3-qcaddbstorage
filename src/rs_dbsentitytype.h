@@ -37,7 +37,7 @@ public:
      * The given entity must be of the correct type, otherwise results are
      * undefined.
      */
-    virtual void save(RS_DbConnection& db, RS_Entity& entity) = 0;
+    virtual void save(RS_DbConnection& db, RS_Entity& entity, bool isNew) = 0;
     
     virtual void deleteEntity(RS_DbConnection& db, RS_Entity::Id entityId) = 0;
 

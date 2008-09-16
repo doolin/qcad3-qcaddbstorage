@@ -8,8 +8,6 @@
  *
  * Line entities are stored in a table with the following schema:
  *
- * The DB uses the following tables to store documents:
- *
  * \b Line
  * - \b id: Entity ID.
  * - \b x1: X ordiante of the start point.
@@ -35,6 +33,6 @@ public:
     virtual void initDb(RS_DbConnection& db);
     virtual RS_Entity* instantiate(RS_DbConnection& db, RS_Entity::Id entityId);
     virtual void readEntityData(RS_DbConnection& db, RS_LineData& data, RS_Entity::Id entityId);
-    virtual void save(RS_DbConnection& db, RS_Entity& entity);
+    virtual void save(RS_DbConnection& db, RS_Entity& entity, bool isNew);
     virtual void deleteEntity(RS_DbConnection& db, RS_Entity::Id entityId);
 };

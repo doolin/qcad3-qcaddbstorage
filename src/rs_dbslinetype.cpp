@@ -6,7 +6,7 @@
 
 
 void RS_DbsLineType::registerType() {
-    RS_DbsEntityTypeRegistry::registerEntityType(RS_LineEntity::getTypeIdStatic(), new RS_DbsLineType());
+    RS_DbsEntityTypeRegistry::registerEntityType(RS_LineEntity::getEntityTypeIdStatic(), new RS_DbsLineType());
 }
 
 
@@ -63,23 +63,44 @@ void RS_DbsLineType::readEntityData(RS_DbConnection& db, RS_LineData& data, RS_E
 
 
 
-void RS_DbsLineType::save(RS_DbConnection& db, RS_Entity& entity) {
+void RS_DbsLineType::save(RS_DbConnection& db, RS_Entity& entity, bool isNew) {
     RS_LineEntity& line = dynamic_cast<RS_LineEntity&>(entity);
-
-    RS_DbCommand cmd(
-        db, 
-        "INSERT INTO Line "
-        "VALUES(?,?,?,?,?,?,?)"
-    );
     RS_LineData& data = line.getData();
-    cmd.bind(1, entity.getId());
-    cmd.bind(2, data.startPoint.x);
-    cmd.bind(3, data.startPoint.y);
-    cmd.bind(4, data.startPoint.z);
-    cmd.bind(5, data.endPoint.x);
-    cmd.bind(6, data.endPoint.y);
-    cmd.bind(7, data.endPoint.z);
-    cmd.executeNonQuery();
+
+    // add line as new entity:
+    if (isNew) {
+        RS_DbCommand cmd(
+            db, 
+            "INSERT INTO Line "
+            "VALUES(?,?,?,?,?,?,?)"
+        );
+        cmd.bind(1, line.getId());
+        cmd.bind(2, data.startPoint.x);
+        cmd.bind(3, data.startPoint.y);
+        cmd.bind(4, data.startPoint.z);
+        cmd.bind(5, data.endPoint.x);
+        cmd.bind(6, data.endPoint.y);
+        cmd.bind(7, data.endPoint.z);
+        cmd.executeNonQuery();
+    }
+
+    // update existing line:
+    else {
+        RS_DbCommand cmd(
+            db, 
+            "UPDATE Line "
+            "SET x1=?, y1=?, z1=?, x2=?, y2=?, z2=? "
+            "WHERE id=?"
+        );
+        cmd.bind(1, data.startPoint.x);
+        cmd.bind(2, data.startPoint.y);
+        cmd.bind(3, data.startPoint.z);
+        cmd.bind(4, data.endPoint.x);
+        cmd.bind(5, data.endPoint.y);
+        cmd.bind(6, data.endPoint.z);
+        cmd.bind(7, line.getId());
+        cmd.executeNonQuery();
+    }
 }
 
 
