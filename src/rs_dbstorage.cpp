@@ -112,7 +112,26 @@ RS_DbStorage::~RS_DbStorage() {
 
 
 
-std::set<RS_Entity::Id> RS_DbStorage::queryAll() {
+std::set<RS_Object::Id> RS_DbStorage::queryAllObjects() {
+    std::set<RS_Object::Id> ret;
+            
+    RS_DbCommand cmd(
+        db, 
+        "SELECT id "
+        "FROM Object"
+    );
+
+    RS_DbReader reader = cmd.executeReader();
+    while (reader.read()) {
+        ret.insert(reader.getInt64(0));
+    }
+
+    return ret;
+}
+
+
+
+std::set<RS_Entity::Id> RS_DbStorage::queryAllEntities() {
     std::set<RS_Entity::Id> ret;
             
     RS_DbCommand cmd(

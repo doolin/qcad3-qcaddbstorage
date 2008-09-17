@@ -64,7 +64,8 @@ public:
     RS_DbStorage(const std::string& fileName = ":memory:");
     virtual ~RS_DbStorage();
 
-    virtual std::set<RS_Entity::Id> queryAll();
+    virtual std::set<RS_Object::Id> queryAllObjects();
+    virtual std::set<RS_Entity::Id> queryAllEntities();
     virtual std::set<RS_Entity::Id> querySelected();
     virtual RS_Object* queryObject(RS_Object::Id objectId);
     virtual RS_Entity* queryEntity(RS_Entity::Id entityId);
