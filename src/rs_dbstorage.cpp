@@ -15,10 +15,6 @@
 RS_DbStorage::RS_DbStorage(const std::string& fileName) {
     db.open(fileName.c_str());
     
-    // there is no header for shell.c, so this cannot work: 
-    //struct callback_data data;
-    //do_meta_command(".dump", &data);
-    
     db.executeNonQuery(
         "CREATE TABLE Object("
             "id INTEGER PRIMARY KEY, "
@@ -118,7 +114,8 @@ std::set<RS_Object::Id> RS_DbStorage::queryAllObjects() {
     RS_DbCommand cmd(
         db, 
         "SELECT id "
-        "FROM Object"
+        "FROM Object "
+        "WHERE undoStatus=0"
     );
 
     RS_DbReader reader = cmd.executeReader();
@@ -137,8 +134,11 @@ std::set<RS_Entity::Id> RS_DbStorage::queryAllEntities() {
     RS_DbCommand cmd(
         db, 
         "SELECT id "
-        "FROM Entity"
+        "FROM Object "
+        "WHERE undoStatus=0 "
+        "  AND objectType=?"
     );
+    cmd.bind(1, RS_Object::EntityObject);
 
     RS_DbReader reader = cmd.executeReader();
     while (reader.read()) {
@@ -155,9 +155,11 @@ std::set<RS_Entity::Id> RS_DbStorage::querySelected() {
             
     RS_DbCommand cmd(
         db, 
-        "SELECT id "
-        "FROM Entity "
-        "WHERE selectionStatus=1"
+        "SELECT Object.id "
+        "FROM Object, Entity "
+        "WHERE Object.id=Entity.id "
+        "  AND Object.undoStatus=0 "
+        "  AND Entity.selectionStatus=1"
     );
 
     RS_DbReader reader = cmd.executeReader();
@@ -176,7 +178,8 @@ RS_Object* RS_DbStorage::queryObject(RS_Object::Id objectId) {
         db, 
         "SELECT objectType "
         "FROM Object "
-        "WHERE id=?"
+        "WHERE id=? "
+        "  AND undoStatus=0"
     );
     cmd.bind(1, objectId);
 
@@ -188,7 +191,7 @@ RS_Object* RS_DbStorage::queryObject(RS_Object::Id objectId) {
     switch((RS_Object::ObjectTypeId)reader.getInt64(0)) {
     case RS_Object::EntityObject:
         return (RS_Object*)queryEntity(objectId);
-    // TODO: implement more objet types (layers, UCS, ...)
+    // TODO: implement more object types (layers, UCS, ...)
     default:
         return NULL;
     }
@@ -200,11 +203,15 @@ RS_Entity* RS_DbStorage::queryEntity(RS_Entity::Id entityId) {
     // query entity type:
     RS_DbCommand cmd(
         db, 
-        "SELECT entityType "
-        "FROM Entity "
-        "WHERE id=?"
+        "SELECT Entity.entityType "
+        "FROM Object, Entity "
+        "WHERE Object.id=Entity.id "
+        "  AND Object.id=? "
+        "  AND Object.objectType=? "
+        "  AND Object.undoStatus=0"
     );
     cmd.bind(1, entityId);
+    cmd.bind(2, RS_Object::EntityObject);
 
     RS_DbReader reader = cmd.executeReader();
     if (!reader.read()) {
@@ -560,7 +567,12 @@ void RS_DbStorage::commitTransaction() {
     
 void RS_DbStorage::saveTransaction(RS_Transaction& transaction) {
     transaction.setId(getLastTransactionId() + 1);
+
+    RS_Debug::debug("RS_DbStorage::saveTransaction: %d", transaction.getId());
+    
     deleteTransactionsFrom(transaction.getId());
+    
+    RS_Debug::debug("RS_DbStorage::saveTransaction: store transaction");
 
     // store the transaction in the transaction log:
     RS_DbCommand cmd(
@@ -571,54 +583,89 @@ void RS_DbStorage::saveTransaction(RS_Transaction& transaction) {
     cmd.bind(2);
     cmd.bind(3, transaction.getText());
     cmd.executeNonQuery();
+    
+    RS_Debug::debug("RS_DbStorage::saveTransaction: store transaction: OK");
 
     // store the set of entities that are affected by the transaction:
-    std::set<RS_Entity::Id> affectedObjects = transaction.getAffectedObjects();
-    std::set<RS_Entity::Id>::iterator it;
+    std::set<RS_Object::Id> affectedObjects = transaction.getAffectedObjects();
+    std::set<RS_Object::Id>::iterator it;
     for (it=affectedObjects.begin(); it!=affectedObjects.end(); ++it) {
+        RS_Debug::debug("RS_DbStorage::saveTransaction: "
+            "INSERT INTO AffectedObjects VALUES(%d,%d)", transaction.getId(), *it);
+
         RS_DbCommand cmd(
             db, 
-            "INSERT INTO AffectedObjects VALUES(?,?);"
+            "INSERT INTO AffectedObjects VALUES(?,?)"
         );
         cmd.bind(1, transaction.getId());
         cmd.bind(2, *it);
         cmd.executeNonQuery();
-    
-        // store the property changes for all affected objects:
-        std::multimap<RS_Object::Id, RS_PropertyChange> propertyChanges = transaction.getPropertyChanges();
-        std::multimap<RS_Object::Id, RS_PropertyChange>::iterator it2;
-        for (it2=propertyChanges.begin(); it2!=propertyChanges.end(); ++it2) {
-            RS_DbCommand cmd2(
-                db, 
-                "INSERT INTO PropertyChanges VALUES(?,?,?,?,?,?);"
-            );
-            cmd2.bind(1, transaction.getId());
-            cmd2.bind(2, *it);
-            cmd2.bind(3, (*it2).second.propertyTypeId);
-            cmd2.bind(4, (int)((*it2).second.oldValue.getDataType()));
-            // TODO: refactor into RS_PropertyValue::bind (?)
-            switch ((*it2).second.oldValue.getDataType()) {
-            case RS_PropertyValue::Boolean:
-                cmd2.bind(5, (*it2).second.oldValue.getBool());
-                cmd2.bind(6, (*it2).second.newValue.getBool());
-                break;
-            case RS_PropertyValue::Integer:
-                cmd2.bind(5, (*it2).second.oldValue.getInt());
-                cmd2.bind(6, (*it2).second.newValue.getInt());
-                break;
-            case RS_PropertyValue::Double:
-                cmd2.bind(5, (*it2).second.oldValue.getDouble());
-                cmd2.bind(6, (*it2).second.newValue.getDouble());
-                break;
-            case RS_PropertyValue::String:
-                cmd2.bind(5, (*it2).second.oldValue.getString());
-                cmd2.bind(6, (*it2).second.newValue.getString());
-                break;
-            default:
-                break;
-            }
-            cmd2.executeNonQuery();
+        
+        RS_Debug::debug("RS_DbStorage::saveTransaction: INSERT: OK");
+    }
+
+    // store the property changes for all affected objects:
+    std::multimap<RS_Object::Id, RS_PropertyChange> propertyChanges = transaction.getPropertyChanges();
+    std::multimap<RS_Object::Id, RS_PropertyChange>::iterator it2;
+    for (it2=propertyChanges.begin(); it2!=propertyChanges.end(); ++it2) {
+        RS_Debug::debug("RS_DbStorage::saveTransaction: "
+            "INSERT INTO PropertyChanges VALUES("
+        );
+        RS_Debug::debug("RS_DbStorage::saveTransaction: transaction ID: "
+            "%d",
+            transaction.getId()
+        );
+        RS_Debug::debug("RS_DbStorage::saveTransaction: object ID from map: "
+            "%d",
+            (*it2).first
+        );
+        RS_Debug::debug("RS_DbStorage::saveTransaction: property ID: "
+            "%d",
+            (*it2).second.propertyTypeId
+        );
+        RS_Debug::debug("RS_DbStorage::saveTransaction: data type: "
+            "%d",
+            (int)((*it2).second.oldValue.getDataType())
+        );
+        RS_Debug::debug("RS_DbStorage::saveTransaction: old value: "
+            "%s",
+            (*it2).second.oldValue.getString().c_str()
+        );
+        RS_Debug::debug("RS_DbStorage::saveTransaction: new value: "
+            "%s)",
+            (*it2).second.newValue.getString().c_str()
+        );
+
+        RS_DbCommand cmd(
+            db, 
+            "INSERT INTO PropertyChanges VALUES(?,?,?,?,?,?)"
+        );
+        cmd.bind(1, transaction.getId());
+        cmd.bind(2, (*it2).first);
+        cmd.bind(3, (*it2).second.propertyTypeId);
+        cmd.bind(4, (int)((*it2).second.oldValue.getDataType()));
+        // TODO: refactor into RS_PropertyValue::bind (?)
+        switch ((*it2).second.oldValue.getDataType()) {
+        case RS_PropertyValue::Boolean:
+            cmd.bind(5, (*it2).second.oldValue.getBool());
+            cmd.bind(6, (*it2).second.newValue.getBool());
+            break;
+        case RS_PropertyValue::Integer:
+            cmd.bind(5, (*it2).second.oldValue.getInt());
+            cmd.bind(6, (*it2).second.newValue.getInt());
+            break;
+        case RS_PropertyValue::Double:
+            cmd.bind(5, (*it2).second.oldValue.getDouble());
+            cmd.bind(6, (*it2).second.newValue.getDouble());
+            break;
+        case RS_PropertyValue::String:
+            cmd.bind(5, (*it2).second.oldValue.getString());
+            cmd.bind(6, (*it2).second.newValue.getString());
+            break;
+        default:
+            break;
         }
+        cmd.executeNonQuery();
     }
     
     setLastTransactionId(transaction.getId());
@@ -716,7 +763,7 @@ RS_Transaction RS_DbStorage::getTransaction(int transactionId) {
 void RS_DbStorage::deleteTransactionsFrom(int transactionId) {
     RS_Debug::debug("RS_DbStorage::deleteTransactionsFrom: transactionId: %d", transactionId);
 
-    // delete orphaned entities:
+    // delete orphaned objects:
     RS_DbCommand cmd3(
         db, 
         "SELECT oid "
@@ -727,6 +774,8 @@ void RS_DbStorage::deleteTransactionsFrom(int transactionId) {
     RS_DbReader reader = cmd3.executeReader();
     while (reader.read()) {
         int oid = reader.getInt64(0);
+        RS_Debug::debug("RS_DbStorage::deleteTransactionsFrom: "
+            "check for previous transactions with object %d", oid);
 
         // check if there are transactions we are keeping which still refer to the
         // entity in question:
@@ -745,8 +794,11 @@ void RS_DbStorage::deleteTransactionsFrom(int transactionId) {
             deleteEntity(oid);
         }
     }
+        
+    RS_Debug::debug("RS_DbStorage::deleteTransactionsFrom: "
+        "delete records of affected objects");
 
-    // delete records of affected entities of the command:
+    // delete records of affected objects for the transactions:
     RS_DbCommand cmd(
         db, 
         "DELETE FROM AffectedObjects "
@@ -754,6 +806,21 @@ void RS_DbStorage::deleteTransactionsFrom(int transactionId) {
     );
     cmd.bind(1, transactionId);
     cmd.executeNonQuery();
+    
+    RS_Debug::debug("RS_DbStorage::deleteTransactionsFrom: "
+        "delete property changes of transactions");
+
+    // delete property changes for transactions:
+    RS_DbCommand cmd5(
+        db, 
+        "DELETE FROM PropertyChanges "
+        "WHERE tid>=?"
+    );
+    cmd5.bind(1, transactionId);
+    cmd5.executeNonQuery();
+
+    RS_Debug::debug("RS_DbStorage::deleteTransactionsFrom: "
+        "delete transaction");
     
     // delete transaction:
     RS_DbCommand cmd2(
@@ -763,6 +830,8 @@ void RS_DbStorage::deleteTransactionsFrom(int transactionId) {
     );
     cmd2.bind(1, transactionId);
     cmd2.executeNonQuery();
+    
+    RS_Debug::debug("RS_DbStorage::deleteTransactionsFrom: OK");
 }
 
 
@@ -816,9 +885,18 @@ bool RS_DbStorage::getUndoStatus(RS_Object::Id objectId) {
     
     
 void RS_DbStorage::deleteEntity(RS_Entity::Id entityId) {
+    RS_Debug::debug("RS_DbStorage::deleteEntity: %d", entityId);
+
     RS_Entity::EntityTypeId typeId = getEntityType(entityId);
 
+    if (typeId==-1) {
+        RS_Debug::debug("RS_DbStorage::deleteEntity: entity not found");
+        return;
+    }
+
     RS_DbsEntityTypeRegistry::deleteEntity(db, typeId, entityId);
+    
+    RS_Debug::debug("RS_DbStorage::deleteEntity: 001");
     
     RS_DbCommand cmd1(
         db, 
@@ -827,6 +905,8 @@ void RS_DbStorage::deleteEntity(RS_Entity::Id entityId) {
     );
     cmd1.bind(1, entityId);
     cmd1.executeNonQuery();
+    
+    RS_Debug::debug("RS_DbStorage::deleteEntity: 002");
 
     RS_DbCommand cmd2(
         db, 
@@ -835,19 +915,30 @@ void RS_DbStorage::deleteEntity(RS_Entity::Id entityId) {
     );
     cmd2.bind(1, entityId);
     cmd2.executeNonQuery();
+    
+    RS_Debug::debug("RS_DbStorage::deleteEntity: %d: OK", entityId);
 }
     
 
     
+/**
+ * \return Entity type ID of the given entity or -1 if the entity does not exist.
+ */
 RS_Entity::EntityTypeId RS_DbStorage::getEntityType(RS_Entity::Id entityId) {
     RS_DbCommand cmd(
         db, 
-        "SELECT type "
+        "SELECT entityType "
         "FROM Entity "
         "WHERE id=?"
     );
     cmd.bind(1, entityId);
-    return cmd.executeInt();
+    RS_DbReader reader = cmd.executeReader();
+    if (!reader.read()) {
+        return -1;
+    }
+    else {
+        return reader.getInt64(0);
+    }
 }
 
 
