@@ -1,2 +1,2 @@
-#include "../src/rs_dbsentitytyperegistry.h"
+#include "../src/rs_dbsobjecttyperegistry.h"
 

@@ -9,14 +9,14 @@ HEADERS = \
     ./src/rs_dbsentitytype.h \
     ./src/rs_dbsobjecttype.h \
     ./src/rs_dbslinetype.h \
-    ./src/rs_dbsentitytyperegistry.h \
+    ./src/rs_dbsobjecttyperegistry.h \
     ./src/rs_dbstorage.h \
     ./src/rs_dbsucstype.h
 SOURCES = \
     ./src/rs_dbsentitytype.cpp \
     ./src/rs_dbsobjecttype.cpp \
     ./src/rs_dbslinetype.cpp \
-    ./src/rs_dbsentitytyperegistry.cpp \
+    ./src/rs_dbsobjecttyperegistry.cpp \
     ./src/rs_dbstorage.cpp \
     ./src/rs_dbsucstype.cpp
 

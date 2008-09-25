@@ -3,7 +3,7 @@
 
 #include "RS_Entity"
 #include "RS_DbsObjectType"
-#include "RS_DbsEntityTypeRegistry"
+#include "RS_DbsObjectTypeRegistry"
 
 class RS_DbConnection;
 
