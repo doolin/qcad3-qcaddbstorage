@@ -2,6 +2,7 @@
 #define RS_DBENTITY_H
 
 #include "RS_Entity"
+#include "RS_DbsObjectType"
 #include "RS_DbsEntityTypeRegistry"
 
 class RS_DbConnection;
@@ -16,32 +17,15 @@ class RS_DbConnection;
  * \author Andrew Mustun
  * \ingroup qcaddbstorage
  */
-class RS_DbsEntityType {
+class RS_DbsEntityType : public RS_DbsObjectType {
 public:
     RS_DbsEntityType() {}
     virtual ~RS_DbsEntityType() {}
 
-    /**
-     * Initializes the DB for this entity type (creating tables, etc.).
-     */
-    virtual void initDb(RS_DbConnection& db) = 0;
-    
-    /**
-     * Instantiates the entity with the given \c entityId from the DB.
-     * The caller is responsible for deleting the instance.
-     */
-    virtual RS_Entity* instantiate(RS_DbConnection& db, RS_Entity::Id entityId) = 0;
-
-    /**
-     * Saves the given entity to the DB.
-     * The given entity must be of the correct type, otherwise results are
-     * undefined.
-     */
-    virtual void save(RS_DbConnection& db, RS_Entity& entity, bool isNew) = 0;
-    
-    virtual void deleteEntity(RS_DbConnection& db, RS_Entity::Id entityId) = 0;
-
-    virtual void readEntityData(RS_DbConnection& db, RS_EntityData& data, RS_Entity::Id entityId);
+    virtual void initDb(RS_DbConnection& db);
+    virtual void loadObject(RS_DbConnection& db, RS_Object& object, RS_Object::Id objectId);
+    virtual void saveObject(RS_DbConnection& db, RS_Object& object, bool isNew);
+    virtual void deleteObject(RS_DbConnection& db, RS_Object::Id objectId);
 };
 
 #endif

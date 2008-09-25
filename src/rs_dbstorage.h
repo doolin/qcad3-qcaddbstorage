@@ -66,13 +66,16 @@ public:
 
     virtual std::set<RS_Object::Id> queryAllObjects();
     virtual std::set<RS_Entity::Id> queryAllEntities();
-    virtual std::set<RS_Entity::Id> querySelected();
+    virtual std::set<RS_Entity::Id> querySelectedEntities();
+
     virtual RS_Object* queryObject(RS_Object::Id objectId);
     virtual RS_Entity* queryEntity(RS_Entity::Id entityId);
+    virtual RS_Ucs* queryUcs(RS_Ucs::Id ucsId);
 
-    virtual void clearSelection(
+    virtual void clearEntitySelection(
         std::set<RS_Entity::Id>* affectedEntities=NULL
     );
+
     virtual void selectEntity(
         RS_Entity::Id entityId, 
         bool add=false, 
@@ -86,11 +89,9 @@ public:
 
     virtual RS_Box getBoundingBox();
     
-    virtual void saveObject(RS_Object& entity);
-    // todo: protected:
-    virtual void saveEntity(RS_Entity& entity, bool isNew);
-    virtual void deleteEntity(RS_Entity::Id entityId);
-    
+    virtual void saveObject(RS_Object& object);
+    virtual void deleteObject(RS_Object::Id objectId);
+
     virtual void beginTransaction();
     virtual void commitTransaction();
     
@@ -106,8 +107,15 @@ public:
     virtual bool getUndoStatus(RS_Object::Id objectId);
 
 protected:
-    RS_Entity* queryEntity(RS_Entity::Id entityId, RS_Entity::EntityTypeId typeId);
-    RS_Entity::EntityTypeId getEntityType(RS_Entity::Id entityId);
+    //virtual void saveEntity(RS_Entity& entity, bool isNew);
+    //virtual void deleteEntity(RS_Entity::Id entityId);
+    
+    //virtual void saveUcs(RS_Ucs& ucs, bool isNew);
+    //virtual void deleteUcs(RS_Ucs::Id ucsId);
+    
+    RS_Object::ObjectTypeId getObjectTypeId(RS_Object::Id objectId);
+    //RS_Entity::EntityTypeId getEntityTypeId(RS_Entity::Id entityId);
+    RS_Object* queryObject(RS_Object::Id objectId, RS_Object::ObjectTypeId objectTypeId);
 
     static std::string getSqlList(std::set<RS_Object::Id>& values);
 

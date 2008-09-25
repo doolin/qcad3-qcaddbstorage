@@ -2,7 +2,7 @@
 #include "RS_DbStorage"
 #include "RS_DbException"
 #include "RS_DbsEntityType"
-#include "RS_DbsEntityTypeRegistry"
+#include "RS_DbsObjectTypeRegistry"
 
 
 
@@ -15,6 +15,7 @@
 RS_DbStorage::RS_DbStorage(const std::string& fileName) {
     db.open(fileName.c_str());
     
+    /*
     db.executeNonQuery(
         "CREATE TABLE Object("
             "id INTEGER PRIMARY KEY, "
@@ -22,11 +23,13 @@ RS_DbStorage::RS_DbStorage(const std::string& fileName) {
             "undoStatus INTEGER"
         ");"
     );
+    */
 
+    /*
     db.executeNonQuery(
         "CREATE TABLE Entity("
             "id INTEGER PRIMARY KEY, "
-            "entityType INTEGER, "
+            //"entityType INTEGER, "
             "selectionStatus INTEGER, "
             "minX REAL, "
             "minY REAL, "
@@ -36,6 +39,24 @@ RS_DbStorage::RS_DbStorage(const std::string& fileName) {
             "maxZ REAL"
         ");"
     );
+    */
+    
+    /*
+    db.executeNonQuery(
+        "CREATE TABLE Ucs("
+            "id INTEGER PRIMARY KEY, "
+            "originX REAL, "
+            "originY REAL, "
+            "originZ REAL, "
+            "xAxisDirectionX REAL, "
+            "xAxisDirectionY REAL, "
+            "xAxisDirectionZ REAL, "
+            "yAxisDirectionX REAL, "
+            "yAxisDirectionY REAL, "
+            "yAxisDirectionZ REAL"
+        ");"
+    );
+    */
 
     /*
     db.executeNonQuery(
@@ -53,6 +74,7 @@ RS_DbStorage::RS_DbStorage(const std::string& fileName) {
     );
     */
     
+    // 'Transaction' is a reserved keyword, so we use 'Transaction2':
     db.executeNonQuery(
         "CREATE TABLE Transaction2("
             "id INTEGER PRIMARY KEY, "
@@ -94,7 +116,7 @@ RS_DbStorage::RS_DbStorage(const std::string& fileName) {
     cmd.bind(1, -1);
     cmd.executeNonQuery();
  
-    RS_DbsEntityTypeRegistry::initDb(db);
+    RS_DbsObjectTypeRegistry::initDb(db);
 }
 
 
@@ -109,6 +131,7 @@ RS_DbStorage::~RS_DbStorage() {
 
 
 std::set<RS_Object::Id> RS_DbStorage::queryAllObjects() {
+    // TODO: move to RS_DbsObjectType
     std::set<RS_Object::Id> ret;
             
     RS_DbCommand cmd(
@@ -129,6 +152,7 @@ std::set<RS_Object::Id> RS_DbStorage::queryAllObjects() {
 
 
 std::set<RS_Entity::Id> RS_DbStorage::queryAllEntities() {
+    // TODO: move to RS_DbsEntityType
     std::set<RS_Entity::Id> ret;
             
     RS_DbCommand cmd(
@@ -136,9 +160,9 @@ std::set<RS_Entity::Id> RS_DbStorage::queryAllEntities() {
         "SELECT id "
         "FROM Object "
         "WHERE undoStatus=0 "
-        "  AND objectType=?"
+        "  AND objectType>=100"
     );
-    cmd.bind(1, RS_Object::EntityObject);
+    //cmd.bind(1, RS_Object::EntityObject);
 
     RS_DbReader reader = cmd.executeReader();
     while (reader.read()) {
@@ -150,7 +174,8 @@ std::set<RS_Entity::Id> RS_DbStorage::queryAllEntities() {
 
 
 
-std::set<RS_Entity::Id> RS_DbStorage::querySelected() {
+std::set<RS_Entity::Id> RS_DbStorage::querySelectedEntities() {
+    // TODO: move to RS_DbsEntityType
     std::set<RS_Entity::Id> ret;
             
     RS_DbCommand cmd(
@@ -173,32 +198,26 @@ std::set<RS_Entity::Id> RS_DbStorage::querySelected() {
 
 
 RS_Object* RS_DbStorage::queryObject(RS_Object::Id objectId) {
-    // query object type:
-    RS_DbCommand cmd(
-        db, 
-        "SELECT objectType "
-        "FROM Object "
-        "WHERE id=? "
-        "  AND undoStatus=0"
-    );
-    cmd.bind(1, objectId);
+    RS_Object::ObjectTypeId objectTypeId = getObjectTypeId(objectId);
+    return queryObject(objectId, objectTypeId);
 
-    RS_DbReader reader = cmd.executeReader();
-    if (!reader.read()) {
-        return NULL;
-    }
+    /*
+    switch (objectTypeId) {
+    //case RS_Object::EntityObject:
+    //    return (RS_Object*)queryEntity(objectId);
+    
+    case RS_Object::UcsObject:
+        return queryUcs(objectId);
 
-    switch((RS_Object::ObjectTypeId)reader.getInt64(0)) {
-    case RS_Object::EntityObject:
-        return (RS_Object*)queryEntity(objectId);
-    // TODO: implement more object types (layers, UCS, ...)
     default:
-        return NULL;
+        return queryEntity(objectId, objectTypeId);
     }
+    */
 }
 
 
 
+/*
 RS_Entity* RS_DbStorage::queryEntity(RS_Entity::Id entityId) {
     // query entity type:
     RS_DbCommand cmd(
@@ -215,6 +234,8 @@ RS_Entity* RS_DbStorage::queryEntity(RS_Entity::Id entityId) {
 
     RS_DbReader reader = cmd.executeReader();
     if (!reader.read()) {
+        RS_Debug::error("RS_DbStorage::queryEntity: "
+            "cannot read data for entity %d", entityId);
         return NULL;
     }
 
@@ -222,25 +243,106 @@ RS_Entity* RS_DbStorage::queryEntity(RS_Entity::Id entityId) {
         
     return queryEntity(entityId, typeId);
 }
+*/
+
+
+
+/*
+RS_Ucs* RS_DbStorage::queryUcs(RS_Ucs::Id ucsId) {
+    RS_Vector origin;
+    RS_Vector xAxisDirection;
+    RS_Vector yAxisDirection;
+
+    RS_DbCommand cmd(
+        db, 
+        "SELECT originX,originY,originZ, "
+        "       xAxisDirectionX,xAxisDirectionY,xAxisDirectionZ, "
+        "       yAxisDirectionX,yAxisDirectionY,yAxisDirectionZ "
+        "FROM Ucs "
+        "WHERE id=?"
+    );
+    cmd.bind(1, ucsId);
+
+    RS_DbReader reader = cmd.executeReader();
+    if (!reader.read()) {
+        RS_Debug::error("RS_DbStorage::queryUcs: "
+            "cannot read data for UCS %d", ucsId);
+        return NULL;
+    }
+
+    origin.x = reader.getDouble(0);
+    origin.y = reader.getDouble(1);
+    origin.z = reader.getDouble(2);
     
+    xAxisDirection.x = reader.getDouble(3);
+    xAxisDirection.y = reader.getDouble(4);
+    xAxisDirection.z = reader.getDouble(5);
     
+    yAxisDirection.x = reader.getDouble(6);
+    yAxisDirection.y = reader.getDouble(7);
+    yAxisDirection.z = reader.getDouble(8);
+
+    RS_Ucs* ucs = new RS_Ucs(origin, xAxisDirection, yAxisDirection);
+    ucs->setId(ucsId);
+
+    return ucs;
+}
+*/
+
+
 
 /**
  * Internal function to query an entity if the type is already known.
  */
-RS_Entity* RS_DbStorage::queryEntity(RS_Entity::Id entityId, RS_Entity::EntityTypeId typeId) {
-    RS_DbsEntityType* dbsEntityType = RS_DbsEntityTypeRegistry::getDbEntity(typeId);
-    if (dbsEntityType==NULL) {
-        RS_Debug::error("RS_DbStorage::queryEntity: "
-            "no DB Entity object registered for entity type %d", typeId);
+RS_Object* RS_DbStorage::queryObject(RS_Object::Id objectId, RS_Object::ObjectTypeId objectTypeId) {
+    RS_DbsObjectType* dbsObjectType = RS_DbsObjectTypeRegistry::getDbObject(objectTypeId);
+    if (dbsObjectType==NULL) {
+        RS_Debug::error("RS_DbStorage::queryObject: "
+            "no DB object registered for object type %d", objectTypeId);
         return NULL;
     }
-    return dbsEntityType->instantiate(db, entityId);
+
+    return dbsObjectType->loadObject(db, objectId);
 }
 
 
 
-void RS_DbStorage::clearSelection(std::set<RS_Entity::Id>* affectedObjects) {
+RS_Entity* RS_DbStorage::queryEntity(RS_Entity::Id entityId) {
+    RS_Object* object = queryObject(entityId);
+    if (object==NULL) {
+        return NULL;
+    }
+
+    RS_Entity* entity = dynamic_cast<RS_Entity*>(object);
+    if (entity==NULL) {
+        delete object;
+        return NULL;
+    }
+    
+    return entity;
+}
+
+
+
+RS_Ucs* RS_DbStorage::queryUcs(RS_Ucs::Id ucsId) {
+    RS_Object* object = queryObject(ucsId);
+    if (object==NULL) {
+        return NULL;
+    }
+
+    RS_Ucs* ucs = dynamic_cast<RS_Ucs*>(object);
+    if (ucs==NULL) {
+        delete object;
+        return NULL;
+    }
+    
+    return ucs;
+}
+
+
+
+void RS_DbStorage::clearEntitySelection(std::set<RS_Entity::Id>* affectedObjects) {
+    // TODO: move to RS_DbsEntityType
     // find out which entities will be affected:
     if (affectedObjects!=NULL) {
         RS_DbCommand cmd(
@@ -269,6 +371,7 @@ void RS_DbStorage::clearSelection(std::set<RS_Entity::Id>* affectedObjects) {
 void RS_DbStorage::selectEntity(
     RS_Entity::Id entityId, bool add, 
     std::set<RS_Entity::Id>* affectedObjects) {
+    // TODO: move to RS_DbsEntityType
 
     if (add) {
         // only the entity that is added to the selection is affected:
@@ -322,38 +425,15 @@ void RS_DbStorage::selectEntities(
     std::set<RS_Entity::Id>& entityIds, 
     bool add, 
     std::set<RS_Entity::Id>* affectedObjects) {
+    // TODO: move to RS_DbsEntityType
         
     if (affectedObjects!=NULL) {
         (*affectedObjects) = entityIds;
     }
 
-    //if (add) {
-        // only the entities that are added to the selection are affected:
-        //if (affectedObjects!=NULL) {
-            //affectedObjects->insert(affectedObjects->begin(),myvector.begin(),myvector.end());
-            //affectedObjects->insert(entityId);
-        //    (*affectedObjects) = entityIds;
-        //}
-
-        /*
-        RS_DbCommand cmd(
-            db, 
-            std::string(
-                "UPDATE Entity "
-                "SET selectionStatus=1 "
-                "WHERE id IN "
-            ) + getSqlList(entityIds)
-        );
-        //cmd.bind(1, entityId);
-        cmd.executeNonQuery();
-        */
-    //}
-    //else {
     if (!add) {
         // find out which entities will be deselected:
         if (affectedObjects!=NULL) {
-            //(*affectedObjects) = entityIds;
-
             RS_DbCommand cmd(
                 db, 
                 "SELECT id "
@@ -391,6 +471,7 @@ void RS_DbStorage::selectEntities(
 
 
 RS_Box RS_DbStorage::getBoundingBox() {
+    // TODO: move to RS_DbsEntityType
     RS_DbCommand cmd(
         db, 
         "SELECT MIN(minX), MIN(minY), MIN(minZ), "
@@ -419,33 +500,10 @@ RS_Box RS_DbStorage::getBoundingBox() {
 
 
 
-int RS_DbStorage::getLastTransactionId() {
-    RS_DbCommand cmd(
-        db, 
-        "SELECT lastTransaction "
-        "FROM LastTransaction"
-    );
-
-    return cmd.executeInt();
-}
-
-
-
-void RS_DbStorage::setLastTransactionId(int cid) {
-    RS_DbCommand cmd(
-        db, 
-        "UPDATE LastTransaction "
-        "SET lastTransaction=?"
-    );
-    cmd.bind(1, cid);
-    cmd.executeNonQuery();
-}
-    
-    
-    
 void RS_DbStorage::saveObject(RS_Object& object) {
     bool isNew = (object.getId()==-1);
 
+    /*
     // new object:
     if (isNew) {
         // generic object information has to be stored for all object types:
@@ -463,35 +521,47 @@ void RS_DbStorage::saveObject(RS_Object& object) {
     }
     // existing object:
     else {
-        // nothing to update..
-        /*
-        RS_DbCommand cmd(
-            db, 
-            "UPDATE Object SET undoStatus=? "
-            "WHERE id=?"
-        );
+        // nothing to update at this level.
+    }
+    */
+    
+    // look up storage object for this object type in the object type registry:
+    RS_DbsObjectType* dbObjectType = 
+        RS_DbsObjectTypeRegistry::getDbObject(object.getObjectTypeId());
 
-        cmd.bind(1, object.);
-        cmd.bind(2, object.getObjectTypeId());
-        cmd.bind(3, 0);
-
-        cmd.executeNonQuery();
-        object.setId(db.getLastInsertedRowId());
-        */
+    // store entity type specific information:
+    if (dbObjectType==NULL) {
+        RS_Debug::error("RS_DbStorage::saveObject: "
+            "no DB storage object registered for object type %d", 
+            object.getObjectTypeId());
+        return;
     }
 
+    dbObjectType->saveObject(db, object, isNew);
+
+    /*
     switch (object.getObjectTypeId()) {
     case RS_Object::EntityObject:
         saveEntity(dynamic_cast<RS_Entity&>(object), isNew);
+        break;
+
+    case RS_Object::UcsObject:
+        saveUcs(dynamic_cast<RS_Ucs&>(object), isNew);
         break;
     
     default:
         break;
     }
+    */
 }
 
 
 
+/**
+ * Internal function that stores entity objects. This is called
+ * from \ref saveObject.
+ */
+/*
 void RS_DbStorage::saveEntity(RS_Entity& entity, bool isNew) {
     RS_Box boundingBox = entity.getBoundingBox();
     RS_Vector c1 = boundingBox.getDefiningCorner1();
@@ -501,19 +571,19 @@ void RS_DbStorage::saveEntity(RS_Entity& entity, bool isNew) {
         // generic entity information has to be stored for all entity types:
         RS_DbCommand cmd(
             db, 
-            "INSERT INTO Entity VALUES(?,?,?,?,?,?,?,?,?);"
+            "INSERT INTO Entity VALUES(?,?,?,?,?,?,?,?);"
         );
                 
         // ID (was set automatically by saveObject()):
         cmd.bind(1, entity.getId());
-        cmd.bind(2, entity.getEntityTypeId());   // entityType
-        cmd.bind(3, entity.isSelected());        // selectionStatus
-        cmd.bind(4, c1.x);                       // minX
-        cmd.bind(5, c1.y);                       // minY
-        cmd.bind(6, c1.z);                       // minZ
-        cmd.bind(7, c2.x);                       // maxX
-        cmd.bind(8, c2.y);                       // maxY
-        cmd.bind(9, c2.z);                       // maxZ
+        //cmd.bind(2, entity.getEntityTypeId());   // entityType
+        cmd.bind(2, entity.isSelected());        // selectionStatus
+        cmd.bind(3, c1.x);                       // minX
+        cmd.bind(4, c1.y);                       // minY
+        cmd.bind(5, c1.z);                       // minZ
+        cmd.bind(6, c2.x);                       // maxX
+        cmd.bind(7, c2.y);                       // maxY
+        cmd.bind(8, c2.z);                       // maxZ
 
         cmd.executeNonQuery();
     }
@@ -538,21 +608,172 @@ void RS_DbStorage::saveEntity(RS_Entity& entity, bool isNew) {
     
     // look up storage object for this entity type in the entity type registry:
     RS_DbsEntityType* dbEntityType = 
-        RS_DbsEntityTypeRegistry::getDbEntity(entity.getEntityTypeId());
+        RS_DbsObjectTypeRegistry::getDbEntity(entity.getObjectTypeId());
 
     // store entity type specific information:
-    if (dbEntityType!=NULL) {
-        dbEntityType->save(db, entity, isNew);
+    if (dbEntityType==NULL) {
+        RS_Debug::error("RS_DbStorage::saveEntity: "
+            "no DB storage object registered for object / entity type %d", 
+            entity.getObjectTypeId());
+        return;
+    }
+
+    dbEntityType->save(db, entity, isNew);
+}
+*/
+
+
+
+/**
+ * Internal function that stores UCS objects. This is called
+ * from \ref saveObject.
+ */
+/*
+void RS_DbStorage::saveUcs(RS_Ucs& ucs, bool isNew) {
+    if (isNew) {
+        RS_DbCommand cmd(
+            db, 
+            "INSERT INTO Ucs "
+            "VALUES(?, ?,?,?, ?,?,?, ?,?,?);"
+        );
+                
+        // ID (was set automatically by saveObject()):
+        cmd.bind( 1, ucs.getId());
+        cmd.bind( 2, ucs.origin.x);
+        cmd.bind( 3, ucs.origin.y);
+        cmd.bind( 4, ucs.origin.z);
+        cmd.bind( 5, ucs.xAxisDirection.x);
+        cmd.bind( 6, ucs.xAxisDirection.y);
+        cmd.bind( 7, ucs.xAxisDirection.z);
+        cmd.bind( 8, ucs.yAxisDirection.x);
+        cmd.bind( 9, ucs.yAxisDirection.y);
+        cmd.bind(10, ucs.yAxisDirection.z);
+
+        cmd.executeNonQuery();
     }
     else {
-        RS_Debug::error("RS_DbStorage::saveEntity: "
-            "no DB storage object registered for entity type %d", 
-            entity.getEntityTypeId());
+        RS_DbCommand cmd(
+            db, 
+            "UPDATE Ucs "
+            "SET originX=?, originY=?, originZ=?, "
+            "    xAxisDirectionX=?, xAxisDirectionY=?, xAxisDirectionZ=?, "
+            "    yAxisDirectionX=?, yAxisDirectionY=?, yAxisDirectionZ=? "
+            "WHERE id=?"
+        );
+        
+        cmd.bind( 1, ucs.origin.x);
+        cmd.bind( 2, ucs.origin.y);
+        cmd.bind( 3, ucs.origin.z);
+        cmd.bind( 4, ucs.xAxisDirection.x);
+        cmd.bind( 5, ucs.xAxisDirection.y);
+        cmd.bind( 6, ucs.xAxisDirection.z);
+        cmd.bind( 7, ucs.yAxisDirection.x);
+        cmd.bind( 8, ucs.yAxisDirection.y);
+        cmd.bind( 9, ucs.yAxisDirection.z);
+        cmd.bind(10, ucs.getId());
+
+        cmd.executeNonQuery();
     }
 }
+*/
+
+
+
+void RS_DbStorage::deleteObject(RS_Object::Id objectId) {
+    /*
+    switch(getObjectTypeId(objectId)) {
+    case RS_Object::EntityObject:
+        deleteEntity(objectId);
+        break;
     
+    case RS_Object::UcsObject:
+        deleteUcs(objectId);
+        break;
+
+    default:
+        break;
+    }
     
+    RS_DbCommand cmd(
+        db, 
+        "DELETE FROM Object "
+        "WHERE id=?"
+    );
+    cmd.bind(1, objectId);
+    cmd.executeNonQuery();
+    */
     
+    RS_Object::ObjectTypeId objectTypeId = getObjectTypeId(objectId);
+    RS_DbsObjectType* dbsObjectType = RS_DbsObjectTypeRegistry::getDbObject(objectTypeId);
+    if (dbsObjectType==NULL) {
+        RS_Debug::error("RS_DbStorage::deleteObject: "
+            "no DB Object registered for object type %d", objectTypeId);
+        return;
+    }
+
+    // delete record in entity specific table(s) (e.g. from table Line):
+    dbsObjectType->deleteObject(db, objectId);
+}
+
+
+
+/**
+ * Internal function that deletes entity objects. This is called
+ * from \ref deleteObject.
+ */
+/*
+void RS_DbStorage::deleteEntity(RS_Entity::Id entityId) {
+    RS_Debug::debug("RS_DbStorage::deleteEntity: %d", entityId);
+
+    RS_Object::ObjectTypeId objectTypeId = getObjectTypeId(entityId);
+
+    if (objectTypeId==-1) {
+        RS_Debug::debug("RS_DbStorage::deleteEntity: entity not found");
+        return;
+    }
+
+    //RS_DbsObjectTypeRegistry::deleteEntity(db, typeId, entityId);
+    RS_DbsEntityType* dbsEntityType = RS_DbsObjectTypeRegistry::getDbEntity(objectTypeId);
+    if (dbsEntityType==NULL) {
+        RS_Debug::error("RS_DbStorage::deleteEntity: "
+            "no DB Entity object registered for entity type %d", objectTypeId);
+        return;
+    }
+
+    // delete record in entity specific table(s) (e.g. from table Line):
+    dbsEntityType->deleteEntity(db, entityId);
+    
+    // delete record in Entity table:
+    RS_DbCommand cmd(
+        db, 
+        "DELETE FROM Entity "
+        "WHERE id=?"
+    );
+    cmd.bind(1, entityId);
+    cmd.executeNonQuery();
+}
+*/
+
+
+
+/**
+ * Internal function that deletes UCS objects. This is called
+ * from \ref deleteObject.
+ */
+/*
+void RS_DbStorage::deleteUcs(RS_Ucs::Id ucsId) {
+    RS_DbCommand cmd(
+        db, 
+        "DELETE FROM Ucs "
+        "WHERE id=?"
+    );
+    cmd.bind(1, ucsId);
+    cmd.executeNonQuery();
+}
+*/
+
+
+
 void RS_DbStorage::beginTransaction() {
     db.startTransaction();
 }
@@ -562,9 +783,33 @@ void RS_DbStorage::beginTransaction() {
 void RS_DbStorage::commitTransaction() {
     db.endTransaction();
 }
-    
-    
-    
+
+
+
+int RS_DbStorage::getLastTransactionId() {
+    RS_DbCommand cmd(
+        db, 
+        "SELECT lastTransaction "
+        "FROM LastTransaction"
+    );
+
+    return cmd.executeInt();
+}
+
+
+
+void RS_DbStorage::setLastTransactionId(int cid) {
+    RS_DbCommand cmd(
+        db, 
+        "UPDATE LastTransaction "
+        "SET lastTransaction=?"
+    );
+    cmd.bind(1, cid);
+    cmd.executeNonQuery();
+}
+
+
+
 void RS_DbStorage::saveTransaction(RS_Transaction& transaction) {
     transaction.setId(getLastTransactionId() + 1);
 
@@ -671,8 +916,8 @@ void RS_DbStorage::saveTransaction(RS_Transaction& transaction) {
     setLastTransactionId(transaction.getId());
 }
 
-    
-    
+
+
 RS_Transaction RS_DbStorage::getTransaction(int transactionId) {
     // look up command:
     RS_DbCommand cmd1(
@@ -789,9 +1034,8 @@ void RS_DbStorage::deleteTransactionsFrom(int transactionId) {
         cmd4.bind(2, oid);
         RS_DbReader reader4 = cmd4.executeReader();
         if (reader4.read()==false) {
-            RS_Debug::debug("RS_DbStorage::deleteTransactionsFrom: deleteEntity: %d", oid);
-            // TODO: deleteObject
-            deleteEntity(oid);
+            RS_Debug::debug("RS_DbStorage::deleteTransactionsFrom: deleteObject: %d", oid);
+            deleteObject(oid);
         }
     }
         
@@ -881,50 +1125,39 @@ bool RS_DbStorage::getUndoStatus(RS_Object::Id objectId) {
     cmd.bind(1, objectId);
     return (cmd.executeInt()!=0);
 }
-    
-    
-    
-void RS_DbStorage::deleteEntity(RS_Entity::Id entityId) {
-    RS_Debug::debug("RS_DbStorage::deleteEntity: %d", entityId);
 
-    RS_Entity::EntityTypeId typeId = getEntityType(entityId);
 
-    if (typeId==-1) {
-        RS_Debug::debug("RS_DbStorage::deleteEntity: entity not found");
-        return;
+
+/**
+ * \return Object type ID of the given object or RS_Object::UnknownObject if 
+ *      the object does not exist.
+ */
+RS_Object::ObjectTypeId RS_DbStorage::getObjectTypeId(RS_Object::Id objectId) {
+    // query object type ID:
+    RS_DbCommand cmd(
+        db, 
+        "SELECT objectType "
+        "FROM Object "
+        "WHERE id=? "
+        "  AND undoStatus=0"
+    );
+    cmd.bind(1, objectId);
+
+    RS_DbReader reader = cmd.executeReader();
+    if (!reader.read()) {
+        return RS_Object::UnknownObject;
     }
 
-    RS_DbsEntityTypeRegistry::deleteEntity(db, typeId, entityId);
-    
-    RS_Debug::debug("RS_DbStorage::deleteEntity: 001");
-    
-    RS_DbCommand cmd1(
-        db, 
-        "DELETE FROM Object "
-        "WHERE id=?"
-    );
-    cmd1.bind(1, entityId);
-    cmd1.executeNonQuery();
-    
-    RS_Debug::debug("RS_DbStorage::deleteEntity: 002");
-
-    RS_DbCommand cmd2(
-        db, 
-        "DELETE FROM Entity "
-        "WHERE id=?"
-    );
-    cmd2.bind(1, entityId);
-    cmd2.executeNonQuery();
-    
-    RS_Debug::debug("RS_DbStorage::deleteEntity: %d: OK", entityId);
+    return (RS_Object::ObjectTypeId)reader.getInt64(0);
 }
-    
 
-    
+
+
 /**
  * \return Entity type ID of the given entity or -1 if the entity does not exist.
  */
-RS_Entity::EntityTypeId RS_DbStorage::getEntityType(RS_Entity::Id entityId) {
+/*
+RS_Entity::EntityTypeId RS_DbStorage::getEntityTypeId(RS_Entity::Id entityId) {
     RS_DbCommand cmd(
         db, 
         "SELECT entityType "
@@ -940,6 +1173,7 @@ RS_Entity::EntityTypeId RS_DbStorage::getEntityType(RS_Entity::Id entityId) {
         return reader.getInt64(0);
     }
 }
+*/
 
 
 
