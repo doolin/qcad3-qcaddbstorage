@@ -6,12 +6,13 @@
 
 /**
  * Initializes the DB for this object type (creating tables, etc.).
+ * The implementation of the base class must also be called.
  */
 void RS_DbsObjectType::initDb(RS_DbConnection& db) {
     db.executeNonQuery(
         "CREATE TABLE IF NOT EXISTS Object("
             "id INTEGER PRIMARY KEY, "
-            "objectType INTEGER, "
+            "objectTypeId INTEGER, "
             "undoStatus INTEGER"
         ");"
     );
@@ -20,8 +21,8 @@ void RS_DbsObjectType::initDb(RS_DbConnection& db) {
 
 
 /**
- * Instantiates the object with the given \c objectId from the DB.
- * The caller is responsible for deleting the instance.
+ * Loads the object data for the object with the given object id into the 
+ * given object.
  */
 void RS_DbsObjectType::loadObject(RS_DbConnection& /*db*/, RS_Object& object, RS_Object::Id objectId) {
     // nothing to load at this level.
@@ -34,6 +35,7 @@ void RS_DbsObjectType::loadObject(RS_DbConnection& /*db*/, RS_Object& object, RS
  * Saves the given object to the DB.
  * The given object must be of the correct type, otherwise results are
  * undefined.
+ * The implementation of the base class must also be called.
  */
 void RS_DbsObjectType::saveObject(RS_DbConnection& db, RS_Object& object, bool isNew) {
     // new object:
@@ -63,6 +65,7 @@ void RS_DbsObjectType::saveObject(RS_DbConnection& db, RS_Object& object, bool i
 
 /**
  * Deletes the object with the given ID.
+ * The implementation of the base class must also be called.
  */
 void RS_DbsObjectType::deleteObject(RS_DbConnection& db, RS_Object::Id objectId) {
     RS_DbCommand cmd(

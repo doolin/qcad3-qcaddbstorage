@@ -101,7 +101,7 @@ std::set<RS_Entity::Id> RS_DbStorage::queryAllEntities() {
         "SELECT id "
         "FROM Object "
         "WHERE undoStatus=0 "
-        "  AND objectType>=100"
+        "  AND objectTypeId>=100"
     );
     //cmd.bind(1, RS_Object::EntityObject);
 
@@ -167,7 +167,7 @@ RS_Entity* RS_DbStorage::queryEntity(RS_Entity::Id entityId) {
         "FROM Object, Entity "
         "WHERE Object.id=Entity.id "
         "  AND Object.id=? "
-        "  AND Object.objectType=? "
+        "  AND Object.objectTypeId=? "
         "  AND Object.undoStatus=0"
     );
     cmd.bind(1, entityId);
@@ -1077,7 +1077,7 @@ RS_Object::ObjectTypeId RS_DbStorage::getObjectTypeId(RS_Object::Id objectId) {
     // query object type ID:
     RS_DbCommand cmd(
         db, 
-        "SELECT objectType "
+        "SELECT objectTypeId "
         "FROM Object "
         "WHERE id=? "
         "  AND undoStatus=0"
