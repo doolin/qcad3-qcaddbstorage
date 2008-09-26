@@ -44,7 +44,7 @@ public:
     static void cleanUp();
     
     static void registerObjectType(
-        RS_Object::ObjectTypeId typeId, 
+        RS_Object::ObjectTypeId objectTypeId, 
         RS_DbsObjectType* dbObject
     );
 
@@ -52,11 +52,8 @@ public:
 
     static RS_DbsObjectType* getDbObject(RS_Object::ObjectTypeId objectTypeId);
 
-    //static void deleteObject(RS_DbConnection& db, RS_Object::ObjectTypeId typeId, RS_Object::Id entityId);
-
 private:
     static std::map<RS_Object::ObjectTypeId, RS_DbsObjectType*> dbObjects;
-    //static RS_Object::ObjectTypeId objectTypeIdCounter;
 };
 
 #endif

@@ -26,6 +26,13 @@ public:
     virtual void loadObject(RS_DbConnection& db, RS_Object& object, RS_Object::Id objectId);
     virtual void saveObject(RS_DbConnection& db, RS_Object& object, bool isNew);
     virtual void deleteObject(RS_DbConnection& db, RS_Object::Id objectId);
+    
+    static void queryAllEntities(RS_DbConnection& db, std::set<RS_Entity::Id>& result);
+    static void querySelectedEntities(RS_DbConnection& db, std::set<RS_Entity::Id>& result);
+    static void clearEntitySelection(RS_DbConnection& db, std::set<RS_Entity::Id>* affectedObjects);
+    static void selectEntity(RS_DbConnection& db, RS_Entity::Id entityId, bool add, std::set<RS_Entity::Id>* affectedObjects);
+    static void selectEntities(RS_DbConnection& db, std::set<RS_Entity::Id>& entityIds, bool add, std::set<RS_Entity::Id>* affectedObjects);
+    static RS_Box getBoundingBox(RS_DbConnection& db);
 };
 
 #endif

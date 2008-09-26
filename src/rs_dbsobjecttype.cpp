@@ -76,3 +76,22 @@ void RS_DbsObjectType::deleteObject(RS_DbConnection& db, RS_Object::Id objectId)
     cmd.bind(1, objectId);
     cmd.executeNonQuery();
 }
+
+
+
+/**
+ * Helper function for RS_DbStorage.
+ */
+void RS_DbsObjectType::queryAllObjects(RS_DbConnection& db, std::set<RS_Object::Id>& result) {
+    RS_DbCommand cmd(
+        db, 
+        "SELECT id "
+        "FROM Object "
+        "WHERE undoStatus=0"
+    );
+
+    RS_DbReader reader = cmd.executeReader();
+    while (reader.read()) {
+        result.insert(reader.getInt64(0));
+    }
+}

@@ -34,6 +34,8 @@ public:
     virtual void saveObject(RS_DbConnection& db, RS_Object& object, bool isNew);
     
     virtual void deleteObject(RS_DbConnection& db, RS_Object::Id objectId);
+
+    static void queryAllObjects(RS_DbConnection& db, std::set<RS_Object::Id>& result);
 };
 
 #endif

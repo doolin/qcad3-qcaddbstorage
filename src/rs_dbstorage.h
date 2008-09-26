@@ -64,9 +64,9 @@ public:
     RS_DbStorage(const std::string& fileName = ":memory:");
     virtual ~RS_DbStorage();
 
-    virtual std::set<RS_Object::Id> queryAllObjects();
-    virtual std::set<RS_Entity::Id> queryAllEntities();
-    virtual std::set<RS_Entity::Id> querySelectedEntities();
+    virtual void queryAllObjects(std::set<RS_Object::Id>& result);
+    virtual void queryAllEntities(std::set<RS_Entity::Id>& result);
+    virtual void querySelectedEntities(std::set<RS_Entity::Id>& result);
 
     virtual RS_Object* queryObject(RS_Object::Id objectId);
     virtual RS_Entity* queryEntity(RS_Entity::Id entityId);
@@ -105,19 +105,12 @@ public:
     virtual void toggleUndoStatus(std::set<RS_Object::Id>& objectIds);
     virtual void toggleUndoStatus(RS_Object::Id objectId);
     virtual bool getUndoStatus(RS_Object::Id objectId);
+    
+    static std::string getSqlList(std::set<RS_Object::Id>& values);
 
 protected:
-    //virtual void saveEntity(RS_Entity& entity, bool isNew);
-    //virtual void deleteEntity(RS_Entity::Id entityId);
-    
-    //virtual void saveUcs(RS_Ucs& ucs, bool isNew);
-    //virtual void deleteUcs(RS_Ucs::Id ucsId);
-    
     RS_Object::ObjectTypeId getObjectTypeId(RS_Object::Id objectId);
-    //RS_Entity::EntityTypeId getEntityTypeId(RS_Entity::Id entityId);
     RS_Object* queryObject(RS_Object::Id objectId, RS_Object::ObjectTypeId objectTypeId);
-
-    static std::string getSqlList(std::set<RS_Object::Id>& values);
 
 private:
     //! connection to SQLite DB:

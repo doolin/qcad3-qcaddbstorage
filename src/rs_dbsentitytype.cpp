@@ -2,6 +2,7 @@
 #include "RS_DbCommand"
 #include "RS_DbConnection"
 #include "RS_DbReader"
+#include "RS_DbStorage"
     
     
     
@@ -125,4 +126,214 @@ void RS_DbsEntityType::deleteObject(RS_DbConnection& db, RS_Object::Id objectId)
     cmd.executeNonQuery();
     
     RS_DbsObjectType::deleteObject(db, objectId);
+}
+
+
+
+/**
+ * Helper function for RS_DbStorage.
+ */
+void RS_DbsEntityType::queryAllEntities(RS_DbConnection& db, std::set<RS_Object::Id>& result) {
+    RS_DbCommand cmd(
+        db, 
+        "SELECT Object.id "
+        "FROM Object, Entity "
+        "WHERE Object.undoStatus=0 "
+        "  AND Object.id=Entity.id"
+    );
+
+    RS_DbReader reader = cmd.executeReader();
+    while (reader.read()) {
+        result.insert(reader.getInt64(0));
+    }
+}
+    
+    
+    
+/**
+ * Helper function for RS_DbStorage.
+ */
+void RS_DbsEntityType::querySelectedEntities(RS_DbConnection& db, std::set<RS_Object::Id>& result) {
+    RS_DbCommand cmd(
+        db, 
+        "SELECT Object.id "
+        "FROM Object, Entity "
+        "WHERE Object.id=Entity.id "
+        "  AND Object.undoStatus=0 "
+        "  AND Entity.selectionStatus=1"
+    );
+
+    RS_DbReader reader = cmd.executeReader();
+    while (reader.read()) {
+        result.insert(reader.getInt64(0));
+    }
+}
+    
+    
+    
+/**
+ * Helper function for RS_DbStorage.
+ */
+void RS_DbsEntityType::clearEntitySelection(RS_DbConnection& db, std::set<RS_Entity::Id>* affectedObjects) {
+    // find out which entities will be affected:
+    if (affectedObjects!=NULL) {
+        RS_DbCommand cmd(
+            db, 
+            "SELECT id "
+            "FROM Entity "
+            "WHERE selectionStatus=1"
+        );
+        RS_DbReader reader = cmd.executeReader();
+        while (reader.read()) {
+            affectedObjects->insert(reader.getInt64(0));
+        }
+    }
+
+    RS_DbCommand cmd(
+        db, 
+        "UPDATE Entity "
+        "SET selectionStatus=0 "
+        "WHERE selectionStatus=1"
+    );
+    cmd.executeNonQuery();
+}
+
+
+
+/**
+ * Helper function for RS_DbStorage.
+ */
+void RS_DbsEntityType::selectEntity(
+    RS_DbConnection& db,
+    RS_Entity::Id entityId, bool add, 
+    std::set<RS_Entity::Id>* affectedObjects) {
+
+    if (add) {
+        // only the entity that is added to the selection is affected:
+        if (affectedObjects!=NULL) {
+            affectedObjects->insert(entityId);
+        }
+
+        RS_DbCommand cmd(
+            db, 
+            "UPDATE Entity "
+            "SET selectionStatus=1 "
+            "WHERE id=?"
+        );
+        cmd.bind(1, entityId);
+        cmd.executeNonQuery();
+    }
+    else {
+        // find out which entities will be affected:
+        if (affectedObjects!=NULL) {
+            RS_DbCommand cmd(
+                db, 
+                "SELECT id "
+                "FROM Entity "
+                "WHERE (id=? AND selectionStatus=0) OR "
+                "      (id!=? AND selectionStatus=1)"
+            );
+            cmd.bind(1, entityId);
+            cmd.bind(2, entityId);
+            RS_DbReader reader = cmd.executeReader();
+            while (reader.read()) {
+                affectedObjects->insert(reader.getInt64(0));
+            }
+        }
+
+        RS_DbCommand cmd(
+            db, 
+            "UPDATE Entity "
+            "SET selectionStatus=NOT(selectionStatus) "
+            "WHERE (id=? AND selectionStatus=0) OR "
+            "      (id!=? AND selectionStatus=1)"
+        );
+        cmd.bind(1, entityId);
+        cmd.bind(2, entityId);
+        cmd.executeNonQuery();
+    }
+}
+
+
+
+/**
+ * Helper function for RS_DbStorage.
+ */
+void RS_DbsEntityType::selectEntities(
+    RS_DbConnection& db,
+    std::set<RS_Entity::Id>& entityIds, 
+    bool add, 
+    std::set<RS_Entity::Id>* affectedObjects) {
+    
+    if (affectedObjects!=NULL) {
+        (*affectedObjects) = entityIds;
+    }
+
+    if (!add) {
+        // find out which entities will be deselected:
+        if (affectedObjects!=NULL) {
+            RS_DbCommand cmd(
+                db, 
+                "SELECT id "
+                "FROM Entity "
+                "WHERE selectionStatus=1"
+            );
+            RS_DbReader reader = cmd.executeReader();
+            while (reader.read()) {
+                affectedObjects->insert(reader.getInt64(0));
+            }
+        }
+
+        // deselect all:
+        RS_DbCommand cmd(
+            db, 
+            "UPDATE Entity "
+            "SET selectionStatus=0 "
+            "WHERE selectionStatus=1"
+        );
+        cmd.executeNonQuery();
+    }
+
+    // select given entities:
+    RS_DbCommand cmd(
+        db, 
+        std::string(
+            "UPDATE Entity "
+            "SET selectionStatus=1 "
+            "WHERE id IN "
+        ) + RS_DbStorage::getSqlList(entityIds)
+    );
+    cmd.executeNonQuery();
+}
+
+
+
+/**
+ * Helper function for RS_DbStorage.
+ */
+RS_Box RS_DbsEntityType::getBoundingBox(RS_DbConnection& db) {
+    RS_DbCommand cmd(
+        db, 
+        "SELECT MIN(minX), MIN(minY), MIN(minZ), "
+        "       MAX(maxX), MAX(maxY), MAX(maxZ) "
+        "FROM Object, Entity "
+        "WHERE Object.id=Entity.id "
+        "   AND undoStatus=0"
+    );
+    RS_DbReader reader = cmd.executeReader();
+
+    RS_Vector minV;
+    RS_Vector maxV;
+    
+    if (reader.read()) {
+        minV.x = reader.getDouble(0);
+        minV.y = reader.getDouble(1);
+        minV.z = reader.getDouble(2);
+        
+        maxV.x = reader.getDouble(3);
+        maxV.y = reader.getDouble(4);
+        maxV.z = reader.getDouble(5);
+    }
+
+    return RS_Box(minV, maxV);
 }

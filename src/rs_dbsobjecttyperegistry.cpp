@@ -17,7 +17,8 @@ std::map<RS_Object::ObjectTypeId, RS_DbsObjectType*> RS_DbsObjectTypeRegistry::d
 
 
 /**
- * Registers all entity types that are part of the qcadcode module.
+ * Registers all object types that are part of the qcadcore module
+ * (UCS, layer, line, ...).
  */
 void RS_DbsObjectTypeRegistry::registerStandardObjectTypes() {
     RS_DbsUcsType::registerType();
@@ -27,26 +28,21 @@ void RS_DbsObjectTypeRegistry::registerStandardObjectTypes() {
 
 
 /**
- * Registers an entity type from a unique type ID, a initialization
- * function that initializes the DB and a factory function that produces 
- * entities of that type.
+ * Registers a new (non-standard) object type with a unique type ID.
  *
- * @param initDbFunction: Pointer to a static member function of the
- *      entity class which initializes the table(s) necessary for 
- *      storing entities of this type.
- * @param factoryFunction: Pointer to a static member function of the
- *      entity class which creates an entity by a given ID.
+ * @param dbObject Instance of an RS_DbsObjectType implementation. This
+ *      object handles all DB interaction for the new object type.
  */
 void RS_DbsObjectTypeRegistry::registerObjectType(
-    RS_Object::ObjectTypeId typeId, 
+    RS_Object::ObjectTypeId objectTypeId, 
     RS_DbsObjectType* dbObject) {
 
-    if (dbObjects.count(typeId)==0) {
-        dbObjects[typeId] = dbObject;
+    if (dbObjects.count(objectTypeId)==0) {
+        dbObjects[objectTypeId] = dbObject;
     }
     else {
         RS_Debug::error("RS_DbsObjectTypeRegistry::registerObjectType: "
-            "duplicate type ID: %d", typeId);
+            "duplicate type ID: %d", objectTypeId);
     }
 }
 
@@ -69,9 +65,9 @@ void RS_DbsObjectTypeRegistry::initDb(RS_DbConnection& db) {
  * \return The factory function that can be used to produce entities of
  *      the given type or NULL.
  */
-RS_DbsObjectType* RS_DbsObjectTypeRegistry::getDbObject(RS_Object::ObjectTypeId typeId) {
-    if (dbObjects.count(typeId)==1) {
-        return dbObjects[typeId];
+RS_DbsObjectType* RS_DbsObjectTypeRegistry::getDbObject(RS_Object::ObjectTypeId objectTypeId) {
+    if (dbObjects.count(objectTypeId)==1) {
+        return dbObjects[objectTypeId];
     }
     else {
         return NULL;
@@ -80,13 +76,6 @@ RS_DbsObjectType* RS_DbsObjectTypeRegistry::getDbObject(RS_Object::ObjectTypeId 
     
     
     
-/*
-void RS_DbsObjectTypeRegistry::deleteObject(RS_DbConnection& db, RS_Object::ObjectTypeId typeId, RS_Object::Id entityId) {
-    dbObjects[typeId]->deleteObject(db, entityId);
-}
-*/
-
-
 /**
  * Cleans up all known entity types. Call this at the end of an application,
  * just before the application is terminated.
