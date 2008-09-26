@@ -15,65 +15,6 @@
 RS_DbStorage::RS_DbStorage(const std::string& fileName) {
     db.open(fileName.c_str());
     
-    /*
-    db.executeNonQuery(
-        "CREATE TABLE Object("
-            "id INTEGER PRIMARY KEY, "
-            "objectType INTEGER, "
-            "undoStatus INTEGER"
-        ");"
-    );
-    */
-
-    /*
-    db.executeNonQuery(
-        "CREATE TABLE Entity("
-            "id INTEGER PRIMARY KEY, "
-            //"entityType INTEGER, "
-            "selectionStatus INTEGER, "
-            "minX REAL, "
-            "minY REAL, "
-            "minZ REAL, "
-            "maxX REAL, "
-            "maxY REAL, "
-            "maxZ REAL"
-        ");"
-    );
-    */
-    
-    /*
-    db.executeNonQuery(
-        "CREATE TABLE Ucs("
-            "id INTEGER PRIMARY KEY, "
-            "originX REAL, "
-            "originY REAL, "
-            "originZ REAL, "
-            "xAxisDirectionX REAL, "
-            "xAxisDirectionY REAL, "
-            "xAxisDirectionZ REAL, "
-            "yAxisDirectionX REAL, "
-            "yAxisDirectionY REAL, "
-            "yAxisDirectionZ REAL"
-        ");"
-    );
-    */
-
-    /*
-    db.executeNonQuery(
-        "CREATE TABLE Block("
-            "name VARCHAR PRIMARY KEY"
-        ");"
-    );
-    
-    db.executeNonQuery(
-        "CREATE TABLE Layer("
-            "id INTEGER PRIMARY KEY, "
-            "originalId INTEGER, "
-            "name VARCHAR PRIMARY KEY"
-        ");"
-    );
-    */
-    
     // 'Transaction' is a reserved keyword, so we use 'Transaction2':
     db.executeNonQuery(
         "CREATE TABLE Transaction2("
