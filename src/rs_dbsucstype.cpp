@@ -20,6 +20,7 @@ void RS_DbsUcsType::initDb(RS_DbConnection& db) {
     db.executeNonQuery(
         "CREATE TABLE Ucs("
             "id INTEGER PRIMARY KEY, "
+            "name TEXT, "
             "originX REAL, "
             "originY REAL, "
             "originZ REAL, "
@@ -52,13 +53,15 @@ void RS_DbsUcsType::loadObject(RS_DbConnection& db, RS_Object& object, RS_Object
         return;
     }
 
+    std::string name;
     RS_Vector origin;
     RS_Vector xAxisDirection;
     RS_Vector yAxisDirection;
 
     RS_DbCommand cmd(
         db, 
-        "SELECT originX,originY,originZ, "
+        "SELECT name, "
+        "       originX,originY,originZ, "
         "       xAxisDirectionX,xAxisDirectionY,xAxisDirectionZ, "
         "       yAxisDirectionX,yAxisDirectionY,yAxisDirectionZ "
         "FROM Ucs "
@@ -73,18 +76,21 @@ void RS_DbsUcsType::loadObject(RS_DbConnection& db, RS_Object& object, RS_Object
         return;
     }
 
-    origin.x = reader.getDouble(0);
-    origin.y = reader.getDouble(1);
-    origin.z = reader.getDouble(2);
-    
-    xAxisDirection.x = reader.getDouble(3);
-    xAxisDirection.y = reader.getDouble(4);
-    xAxisDirection.z = reader.getDouble(5);
-    
-    yAxisDirection.x = reader.getDouble(6);
-    yAxisDirection.y = reader.getDouble(7);
-    yAxisDirection.z = reader.getDouble(8);
+    name = reader.getString(0);
 
+    origin.x = reader.getDouble(1);
+    origin.y = reader.getDouble(2);
+    origin.z = reader.getDouble(3);
+    
+    xAxisDirection.x = reader.getDouble(4);
+    xAxisDirection.y = reader.getDouble(5);
+    xAxisDirection.z = reader.getDouble(6);
+    
+    yAxisDirection.x = reader.getDouble(7);
+    yAxisDirection.y = reader.getDouble(8);
+    yAxisDirection.z = reader.getDouble(9);
+
+    ucs->name = name;
     ucs->setOrigin(origin);
     ucs->setXAxisDirection(xAxisDirection);
     ucs->setYAxisDirection(yAxisDirection);
@@ -106,20 +112,21 @@ void RS_DbsUcsType::saveObject(RS_DbConnection& db, RS_Object& object, bool isNe
         RS_DbCommand cmd(
             db, 
             "INSERT INTO Ucs "
-            "VALUES(?, ?,?,?, ?,?,?, ?,?,?);"
+            "VALUES(?, ?, ?,?,?, ?,?,?, ?,?,?);"
         );
                 
         // ID (was set automatically by saveObject()):
         cmd.bind( 1, ucs->getId());
-        cmd.bind( 2, ucs->origin.x);
-        cmd.bind( 3, ucs->origin.y);
-        cmd.bind( 4, ucs->origin.z);
-        cmd.bind( 5, ucs->xAxisDirection.x);
-        cmd.bind( 6, ucs->xAxisDirection.y);
-        cmd.bind( 7, ucs->xAxisDirection.z);
-        cmd.bind( 8, ucs->yAxisDirection.x);
-        cmd.bind( 9, ucs->yAxisDirection.y);
-        cmd.bind(10, ucs->yAxisDirection.z);
+        cmd.bind( 2, ucs->name);
+        cmd.bind( 3, ucs->origin.x);
+        cmd.bind( 4, ucs->origin.y);
+        cmd.bind( 5, ucs->origin.z);
+        cmd.bind( 6, ucs->xAxisDirection.x);
+        cmd.bind( 7, ucs->xAxisDirection.y);
+        cmd.bind( 8, ucs->xAxisDirection.z);
+        cmd.bind( 9, ucs->yAxisDirection.x);
+        cmd.bind(10, ucs->yAxisDirection.y);
+        cmd.bind(11, ucs->yAxisDirection.z);
 
         cmd.executeNonQuery();
     }
@@ -129,22 +136,24 @@ void RS_DbsUcsType::saveObject(RS_DbConnection& db, RS_Object& object, bool isNe
         RS_DbCommand cmd(
             db, 
             "UPDATE Ucs "
-            "SET originX=?, originY=?, originZ=?, "
+            "SET name=?, "
+            "    originX=?, originY=?, originZ=?, "
             "    xAxisDirectionX=?, xAxisDirectionY=?, xAxisDirectionZ=?, "
             "    yAxisDirectionX=?, yAxisDirectionY=?, yAxisDirectionZ=? "
             "WHERE id=?"
         );
         
-        cmd.bind( 1, ucs->origin.x);
-        cmd.bind( 2, ucs->origin.y);
-        cmd.bind( 3, ucs->origin.z);
-        cmd.bind( 4, ucs->xAxisDirection.x);
-        cmd.bind( 5, ucs->xAxisDirection.y);
-        cmd.bind( 6, ucs->xAxisDirection.z);
-        cmd.bind( 7, ucs->yAxisDirection.x);
-        cmd.bind( 8, ucs->yAxisDirection.y);
-        cmd.bind( 9, ucs->yAxisDirection.z);
-        cmd.bind(10, ucs->getId());
+        cmd.bind( 1, ucs->name);
+        cmd.bind( 2, ucs->origin.x);
+        cmd.bind( 3, ucs->origin.y);
+        cmd.bind( 4, ucs->origin.z);
+        cmd.bind( 5, ucs->xAxisDirection.x);
+        cmd.bind( 6, ucs->xAxisDirection.y);
+        cmd.bind( 7, ucs->xAxisDirection.z);
+        cmd.bind( 8, ucs->yAxisDirection.x);
+        cmd.bind( 9, ucs->yAxisDirection.y);
+        cmd.bind(10, ucs->yAxisDirection.z);
+        cmd.bind(11, ucs->getId());
 
         cmd.executeNonQuery();
     }
