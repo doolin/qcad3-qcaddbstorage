@@ -45,16 +45,18 @@ RS_DbStorage::RS_DbStorage(const std::string& fileName) {
     );
     
     db.executeNonQuery(
-        "CREATE TABLE LastTransaction("
-            "lastTransaction INTEGER PRIMARY KEY"
+        "CREATE TABLE Variables("
+            "key STRING PRIMARY KEY, "
+            "value BLOB"
         ");"
     );
     
     RS_DbCommand cmd(
         db, 
-        "INSERT INTO LastTransaction VALUES(?);"
+        "INSERT INTO Variables VALUES(?,?);"
     );
-    cmd.bind(1, -1);
+    cmd.bind(1, "LastTransaction");
+    cmd.bind(2, -1);
     cmd.executeNonQuery();
  
     // initialize the DB for all registered object types:
@@ -219,8 +221,9 @@ void RS_DbStorage::commitTransaction() {
 int RS_DbStorage::getLastTransactionId() {
     RS_DbCommand cmd(
         db, 
-        "SELECT lastTransaction "
-        "FROM LastTransaction"
+        "SELECT value "
+        "FROM Variables "
+        "WHERE key='LastTransaction'"
     );
 
     return cmd.executeInt();
@@ -231,8 +234,9 @@ int RS_DbStorage::getLastTransactionId() {
 void RS_DbStorage::setLastTransactionId(int cid) {
     RS_DbCommand cmd(
         db, 
-        "UPDATE LastTransaction "
-        "SET lastTransaction=?"
+        "UPDATE Variables "
+        "SET value=? "
+        "WHERE key='LastTransaction'"
     );
     cmd.bind(1, cid);
     cmd.executeNonQuery();
@@ -241,14 +245,18 @@ void RS_DbStorage::setLastTransactionId(int cid) {
 
 
 void RS_DbStorage::saveTransaction(RS_Transaction& transaction) {
+    // if the given transaction is not undoable, we don't need to
+    // store anything here:
+    if (!transaction.isUndoable()) {
+        return;
+    }
+
+    // assign new unique ID for this transaction:
     transaction.setId(getLastTransactionId() + 1);
 
-    RS_Debug::debug("RS_DbStorage::saveTransaction: %d", transaction.getId());
-    
+    // delete transactions that are lost for good due to this transaction:
     deleteTransactionsFrom(transaction.getId());
     
-    RS_Debug::debug("RS_DbStorage::saveTransaction: store transaction");
-
     // store the transaction in the transaction log:
     RS_DbCommand cmd(
         db, 
