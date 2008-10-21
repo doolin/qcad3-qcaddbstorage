@@ -20,7 +20,7 @@ void RS_DbsUcsType::initDb(RS_DbConnection& db) {
     db.executeNonQuery(
         "CREATE TABLE Ucs("
             "id INTEGER PRIMARY KEY, "
-            "name TEXT, "
+            "name TEXT UNIQUE, "
             "originX REAL, "
             "originY REAL, "
             "originZ REAL, "
@@ -128,7 +128,12 @@ void RS_DbsUcsType::saveObject(RS_DbConnection& db, RS_Object& object, bool isNe
         cmd.bind(10, ucs->yAxisDirection.y);
         cmd.bind(11, ucs->yAxisDirection.z);
 
-        cmd.executeNonQuery();
+        try {
+            cmd.executeNonQuery();
+        }
+        catch (RS_DbException e) {
+            RS_Debug::error("RS_DbsUcsType::saveObject: DB exception: %s", e.error().c_str());
+        }
     }
 
     // update existing UCS:
