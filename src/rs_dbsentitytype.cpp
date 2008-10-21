@@ -133,7 +133,7 @@ void RS_DbsEntityType::deleteObject(RS_DbConnection& db, RS_Object::Id objectId)
 /**
  * Helper function for RS_DbStorage.
  */
-void RS_DbsEntityType::queryAllEntities(RS_DbConnection& db, std::set<RS_Object::Id>& result) {
+void RS_DbsEntityType::queryAllEntities(RS_DbConnection& db, std::set<RS_Entity::Id>& result) {
     RS_DbCommand cmd(
         db, 
         "SELECT Object.id "

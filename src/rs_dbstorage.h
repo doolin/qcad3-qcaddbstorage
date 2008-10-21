@@ -66,6 +66,8 @@ public:
 
     virtual void queryAllObjects(std::set<RS_Object::Id>& result);
     virtual void queryAllEntities(std::set<RS_Entity::Id>& result);
+    virtual void queryAllUcs(std::set<RS_Ucs::Id>& result);
+    
     virtual void querySelectedEntities(std::set<RS_Entity::Id>& result);
 
     virtual RS_Object* queryObject(RS_Object::Id objectId);

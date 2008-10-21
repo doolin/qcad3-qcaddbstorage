@@ -3,6 +3,7 @@
 #include "RS_DbException"
 #include "RS_DbsEntityType"
 #include "RS_DbsObjectTypeRegistry"
+#include "RS_DbsUcsType"
 
 
 
@@ -82,6 +83,12 @@ void RS_DbStorage::queryAllObjects(std::set<RS_Object::Id>& result) {
 
 void RS_DbStorage::queryAllEntities(std::set<RS_Entity::Id>& result) {
     return RS_DbsEntityType::queryAllEntities(db, result);
+}
+
+
+
+void RS_DbStorage::queryAllUcs(std::set<RS_Ucs::Id>& result) {
+    return RS_DbsUcsType::queryAllUcs(db, result);
 }
 
 

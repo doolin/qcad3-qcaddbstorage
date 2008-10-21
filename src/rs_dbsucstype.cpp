@@ -173,3 +173,22 @@ void RS_DbsUcsType::deleteObject(RS_DbConnection& db, RS_Object::Id objectId) {
     RS_DbsObjectType::deleteObject(db, objectId);
 }
 
+
+
+/**
+ * Helper function for RS_DbStorage.
+ */
+void RS_DbsUcsType::queryAllUcs(RS_DbConnection& db, std::set<RS_Ucs::Id>& result) {
+    RS_DbCommand cmd(
+        db, 
+        "SELECT Object.id "
+        "FROM Object, Ucs "
+        "WHERE Object.undoStatus=0 "
+        "  AND Object.id=Ucs.id"
+    );
+
+    RS_DbReader reader = cmd.executeReader();
+    while (reader.read()) {
+        result.insert(reader.getInt64(0));
+    }
+}

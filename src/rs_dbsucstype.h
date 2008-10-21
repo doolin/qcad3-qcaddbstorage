@@ -21,4 +21,6 @@ public:
     virtual void loadObject(RS_DbConnection& db, RS_Object& object, RS_Object::Id objectId);
     virtual void saveObject(RS_DbConnection& db, RS_Object& entity, bool isNew);
     virtual void deleteObject(RS_DbConnection& db, RS_Object::Id objectId);
+    
+    static void queryAllUcs(RS_DbConnection& db, std::set<RS_Ucs::Id>& result);
 };
