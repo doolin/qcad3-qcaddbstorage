@@ -147,6 +147,19 @@ RS_Ucs* RS_DbStorage::queryUcs(RS_Ucs::Id ucsId) {
 
 
 
+RS_Ucs* RS_DbStorage::queryUcs(const std::string& ucsName) {
+    RS_DbsUcsType dbsUcsType;
+    
+    RS_Ucs::Id ucsId = dbsUcsType.getUcsId(db, ucsName);
+    if (ucsId==-1) {
+        return NULL;
+    }
+
+    return queryUcs(ucsId);
+}
+
+
+
 void RS_DbStorage::clearEntitySelection(std::set<RS_Entity::Id>* affectedObjects) {
     RS_DbsEntityType::clearEntitySelection(db, affectedObjects);
 }

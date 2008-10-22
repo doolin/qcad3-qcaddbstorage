@@ -73,6 +73,7 @@ public:
     virtual RS_Object* queryObject(RS_Object::Id objectId);
     virtual RS_Entity* queryEntity(RS_Entity::Id entityId);
     virtual RS_Ucs* queryUcs(RS_Ucs::Id ucsId);
+    virtual RS_Ucs* queryUcs(const std::string& ucsName);
 
     virtual void clearEntitySelection(
         std::set<RS_Entity::Id>* affectedEntities=NULL

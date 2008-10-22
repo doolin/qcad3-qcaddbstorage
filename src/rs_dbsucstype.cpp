@@ -181,6 +181,28 @@ void RS_DbsUcsType::deleteObject(RS_DbConnection& db, RS_Object::Id objectId) {
 
 
 /**
+ * \return The ID of the UCS with the given name or -1.
+ */
+RS_Ucs::Id RS_DbsUcsType::getUcsId(RS_DbConnection& db, const std::string& ucsName) {
+    RS_DbCommand cmd(
+        db, 
+        "SELECT id "
+        "FROM Ucs "
+        "WHERE name=?"
+    );
+    cmd.bind(1, ucsName);
+
+    RS_DbReader reader = cmd.executeReader();
+    if (reader.read()) {
+        return reader.getInt64(0);
+    }
+
+    return -1;
+}
+
+
+
+/**
  * Helper function for RS_DbStorage.
  */
 void RS_DbsUcsType::queryAllUcs(RS_DbConnection& db, std::set<RS_Ucs::Id>& result) {
